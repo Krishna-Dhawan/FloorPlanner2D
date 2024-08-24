@@ -1,1 +1,1 @@
-Please check the Demo folder in the src
+Please check the Demo folder
