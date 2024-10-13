@@ -1,4 +1,5 @@
 import java.util.*;
+import comps.*;
 import java.awt.*;
 import javax.swing.*;
 
@@ -13,16 +14,48 @@ public class ControlPanel extends Component {
         cp.setBackground(Color.LIGHT_GRAY);
 
         JLabel l1 = new JLabel("ADD ROOM");
-        JButton r1 = new JButton("Add Room");
-        JButton r2 = new JButton("Add Furniture");
+        JButton r1 = new JButton("Add Bathroom");
+        JButton r2 = new JButton("Add Living/Dining Room");
+        JButton r3 = new JButton("Add Bedroom");
+        JButton r4 = new JButton("Add Kitchen");
+        JButton r5 = new JButton("Add Misc. Room");
+        JTextField x = new JTextField(1);
+        JTextField y = new JTextField(1);
+        JTextField h = new JTextField(1);
+        JTextField w = new JTextField(1);
 
-        r2.addActionListener(e -> mediator.controlPanelAction("Add Room"));
-        r1.addActionListener(e -> mediator.controlPanelAction("Add Furniture"));
+        r1.addActionListener(e -> mediator.controlPanelAction("Add Room", "bath", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+        r2.addActionListener(e -> mediator.controlPanelAction("Add Room", "living", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+        r3.addActionListener(e -> mediator.controlPanelAction("Add Room", "bedroom", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+        r4.addActionListener(e -> mediator.controlPanelAction("Add Room", "kitchen", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+        r5.addActionListener(e -> mediator.controlPanelAction("Add Room", "misc", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+
+        JLabel l2 = new JLabel("ADD FURNITURE");
+        JButton f1 = new JButton("Add Bathroom");
+        JButton f2 = new JButton("Add Living/Dining Room");
+        JButton f3 = new JButton("Add Bedroom");
+        JButton f4 = new JButton("Add Kitchen");
+        JButton f5 = new JButton("Add Misc. Room");
 
         cp.add(l1);
         cp.add(r1);
-//        cp.add(Box.createRigidArea(new Dimension(0, 10))); // Spacer
         cp.add(r2);
-        cp.setLayout(new GridLayout(2, 1));
+        cp.add(r3);
+        cp.add(r4);
+        cp.add(r5);
+
+        cp.add(x);
+        cp.add(y);
+        cp.add(h);
+        cp.add(w);
+
+        cp.add(l2);
+        cp.add(f1);
+        cp.add(f2);
+        cp.add(f3);
+        cp.add(f4);
+        cp.add(f5);
+//        cp.setLayout(new GridLayout(2, 1));
+//        cp.setLayout(new FlowLayout());
     }
 }

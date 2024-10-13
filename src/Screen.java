@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import comps.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -58,10 +59,10 @@ public class Screen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public void controlPanelAction(String action) {
+    public void controlPanelAction(String action, String type, Pos pos) {
         switch (action) {
             case "Add Room":
-                plan.addRoom();
+                plan.addRoom(type, pos);
                 break;
             case "Add Furniture":
                 plan.addFurniture();
