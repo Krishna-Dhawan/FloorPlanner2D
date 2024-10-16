@@ -59,10 +59,22 @@ public class Screen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public void controlPanelAction(String action, String type, Pos pos) {
+    public void controlPanelAction(String action, String type, String[] vals) {
         switch (action) {
             case "Add Room":
-                plan.addRoom(type, pos);
+                if (!vals[0].isEmpty() && !vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
+                    Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
+                    Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+                    plan.addRoom(type, pos, dim);
+                } else if (!vals[0].isEmpty() && !vals[1].isEmpty() && vals[2].isEmpty() && vals[3].isEmpty()) {
+                    Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+                    plan.addRoom(type, pos);
+                } else if (vals[0].isEmpty() && vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
+                    Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
+                    plan.addRoom(type, dim);
+                } else {
+                    plan.addRoom(type);
+                }
                 break;
             case "Add Furniture":
                 plan.addFurniture();

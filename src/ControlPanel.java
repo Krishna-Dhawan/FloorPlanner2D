@@ -7,6 +7,7 @@ public class ControlPanel extends Component {
     JPanel cp;
     private final Screen mediator;
 
+    // TODO: remove layout and add obj.setBounds() for each UI element
     public ControlPanel(Screen screen) {
         mediator = screen;
         cp = new JPanel();
@@ -19,16 +20,31 @@ public class ControlPanel extends Component {
         JButton r3 = new JButton("Add Bedroom");
         JButton r4 = new JButton("Add Kitchen");
         JButton r5 = new JButton("Add Misc. Room");
-        JTextField x = new JTextField(1);
-        JTextField y = new JTextField(1);
-        JTextField h = new JTextField(1);
-        JTextField w = new JTextField(1);
+        JTextField x = new JTextField(10);
+        JTextField y = new JTextField(10);
+        JTextField h = new JTextField(10);
+        JTextField w = new JTextField(10);
 
-        r1.addActionListener(e -> mediator.controlPanelAction("Add Room", "bath", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
-        r2.addActionListener(e -> mediator.controlPanelAction("Add Room", "living", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
-        r3.addActionListener(e -> mediator.controlPanelAction("Add Room", "bedroom", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
-        r4.addActionListener(e -> mediator.controlPanelAction("Add Room", "kitchen", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
-        r5.addActionListener(e -> mediator.controlPanelAction("Add Room", "misc", new Pos(Integer.parseInt(x.getText()), Integer.parseInt(y.getText()))));
+        r1.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
+            mediator.controlPanelAction("Add Room", "bath", vals);
+        });
+        r2.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
+            mediator.controlPanelAction("Add Room", "living", vals);
+        });
+        r3.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
+            mediator.controlPanelAction("Add Room", "bedroom", vals);
+        });
+        r4.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
+            mediator.controlPanelAction("Add Room", "kitchen", vals);
+        });
+        r5.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
+            mediator.controlPanelAction("Add Room", "misc", vals);
+        });
 
         JLabel l2 = new JLabel("ADD FURNITURE");
         JButton f1 = new JButton("Add Bathroom");

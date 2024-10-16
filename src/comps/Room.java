@@ -5,9 +5,9 @@ import javax.swing.*;
 import java.util.*;
 
 public class Room {
-    String roomType;
-    Dim dim;
-    Pos pos; //top-left(?)
+    public String roomType;
+    public Dim dim;
+    public Pos pos; //top-left(?)
     int roomId;
 
     public Room(String roomType, Dim dimensions, Pos pos) {
@@ -17,7 +17,14 @@ public class Room {
         roomId = 0;
     }
 
-    public boolean checkOverlap() {
+    // TODO: do shit
+    public boolean checkOverlap(java.util.List<Room> roomList) {
+        for (Room room : roomList) {
+            if ((room.pos.x <= this.pos.x && room.pos.x + room.dim.width >= this.pos.x)
+                    || (room.pos.y <= this.pos.y && room.pos.y + room.dim.height >= this.pos.y)) {
+                return true;
+            }
+        }
         return false;
     }
 

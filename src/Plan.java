@@ -10,7 +10,7 @@ public class Plan extends Canvas {
     public List<Room> roomList;
 
     public Plan() {
-        this.roomList = new ArrayList<Room>();
+        this.roomList = new ArrayList<>();
         setBackground(Color.WHITE);
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -27,8 +27,54 @@ public class Plan extends Canvas {
         }
     }
 
+    // find the next free space according to row-major order
+    // only works when everything is in row-major order
+    public Pos findSpace() {
+        int xMax = 50;
+        int yMax = 50;
+        int rowHeight = 0;
+        for (Room room : roomList) {
+            xMax += room.dim.width;
+            if(xMax + room.dim.width > 1300) {
+                xMax = 50;
+                yMax += rowHeight;
+                rowHeight = 0;
+            }
+            if (room.dim.height > rowHeight) {
+                rowHeight = room.dim.height;
+            }
+        }
+        return new Pos(xMax, yMax);
+    }
+
     public void addRoom(String roomType, Pos pos) {
-        Room newRoom = new Room(roomType, new Dim(400, 400), pos);
+        Room newRoom = new Room(roomType, new Dim(150, 150), pos);
+        newRoom.checkOverlap();
+        roomList.add(newRoom);
+        System.out.println("Room added to the plan!");
+        repaint(); // Repaint the canvas
+        System.out.println(this.roomList);
+    }
+    public void addRoom(String roomType, Pos pos, Dim dim) {
+        Room newRoom = new Room(roomType, dim, pos);
+        newRoom.checkOverlap();
+        roomList.add(newRoom);
+        System.out.println("Room added to the plan!");
+        repaint(); // Repaint the canvas
+        System.out.println(this.roomList);
+    }
+    public void addRoom(String roomType) {
+        Pos pos = findSpace();
+        Room newRoom = new Room(roomType, new Dim(150, 150), pos);
+        newRoom.checkOverlap();
+        roomList.add(newRoom);
+        System.out.println("Room added to the plan!");
+        repaint(); // Repaint the canvas
+        System.out.println(this.roomList);
+    }
+    public void addRoom(String roomType, Dim dim) {
+        Pos pos = findSpace();
+        Room newRoom = new Room(roomType, dim, pos);
         newRoom.checkOverlap();
         roomList.add(newRoom);
         System.out.println("Room added to the plan!");
