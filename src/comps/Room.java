@@ -17,11 +17,13 @@ public class Room {
         roomId = 0;
     }
 
-    // TODO: do shit
+    // TODO: Test this
     public boolean checkOverlap(java.util.List<Room> roomList) {
         for (Room room : roomList) {
-            if ((room.pos.x <= this.pos.x && room.pos.x + room.dim.width >= this.pos.x)
-                    || (room.pos.y <= this.pos.y && room.pos.y + room.dim.height >= this.pos.y)) {
+            if (!((this.pos.x + this.dim.width <= room.pos.x) ||
+                    (this.pos.x >= room.pos.x + room.dim.width) ||
+                    (this.pos.y + this.dim.height <= room.pos.y) ||
+                    (this.pos.y >= room.pos.y + room.dim.height))) {
                 return true;
             }
         }
@@ -36,7 +38,9 @@ public class Room {
         roomColors.put("kitchen", new Color(255, 79, 79));
         roomColors.put("misc", new Color(222, 141, 255));
 
+        Graphics2D g1 = (Graphics2D) g;
         g.setColor(Color.BLACK); // Room border color
+        g1.setStroke(new BasicStroke(5));
         g.drawRect(pos.x, pos.y, dim.width, dim.height);
         g.setColor(roomColors.get(this.roomType)); // Light blue fill color for the room
         g.fillRect(pos.x, pos.y, dim.width, dim.height);

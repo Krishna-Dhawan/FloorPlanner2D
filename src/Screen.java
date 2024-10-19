@@ -60,27 +60,40 @@ public class Screen extends JFrame {
     }
 
     public void controlPanelAction(String action, String type, String[] vals) {
-        switch (action) {
-            case "Add Room":
-                if (!vals[0].isEmpty() && !vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
-                    Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
-                    Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
-                    plan.addRoom(type, pos, dim);
-                } else if (!vals[0].isEmpty() && !vals[1].isEmpty() && vals[2].isEmpty() && vals[3].isEmpty()) {
-                    Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
-                    plan.addRoom(type, pos);
-                } else if (vals[0].isEmpty() && vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
-                    Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
-                    plan.addRoom(type, dim);
-                } else {
-                    plan.addRoom(type);
-                }
-                break;
-            case "Add Furniture":
-                plan.addFurniture();
-                break;
-            default:
-                break;
-        }
+
+            switch (action) {
+                case "Add Room":
+                    try {
+                        if (!vals[0].isEmpty() && !vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
+                            Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
+                            Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+                            plan.addRoom(type, pos, dim);
+                        } else if (!vals[0].isEmpty() && !vals[1].isEmpty() && vals[2].isEmpty() && vals[3].isEmpty()) {
+                            Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+                            plan.addRoom(type, pos);
+                        } else if (vals[0].isEmpty() && vals[1].isEmpty() && !vals[2].isEmpty() && !vals[3].isEmpty()) {
+                            Dim dim = new Dim(Integer.parseInt(vals[2]), Integer.parseInt(vals[3]));
+                            plan.addRoom(type, dim);
+                        } else {
+                            plan.addRoom(type);
+                        }
+                        break;
+                    } catch (OverlapException e) {
+                        System.out.println("OverlapError");
+                        JDialog overlap = new JDialog(this, "OverlapError");
+                        JLabel l = new JLabel("Overlapping Rooms. Change the position or dimensions.");
+                        overlap.add(l);
+                        overlap.setLocationRelativeTo(this);
+                        overlap.setVisible(true);
+                        overlap.setSize(200, 100);
+                        break;
+                    }
+                case "Add Furniture":
+                    plan.addFurniture();
+                    break;
+                default:
+                    break;
+            }
+
     }
 }
