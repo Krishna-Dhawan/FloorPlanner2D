@@ -7,8 +7,10 @@ import comps.*;
 
 public class Plan extends Canvas {
     public List<Room> roomList;
+    public Screen mediator;
 
-    public Plan() {
+    public Plan(Screen mediator) {
+        this.mediator = mediator;
         this.roomList = new ArrayList<>();
         setBackground(Color.WHITE);
         addMouseListener(new MouseAdapter() {
@@ -19,8 +21,14 @@ public class Plan extends Canvas {
             }
         });
     }
+
+    public void fetchRoomList(List<Room> roomList) {
+        this.roomList = roomList;
+        repaint();
+    }
+
     public void paint(Graphics g) {
-        //        super.paintComponent(g);
+        // super.paintComponent(g);
         for (Room room : roomList) {
             room.draw(g);
         }
@@ -46,55 +54,32 @@ public class Plan extends Canvas {
         return new Pos(xMax, yMax);
     }
 
-    public void addRoom(String roomType, Pos pos) throws OverlapException {
-        Room newRoom = new Room(roomType, new Dim(150, 150), pos);
-        if (newRoom.checkOverlap(roomList)) {
-            throw new OverlapException("Overlapping room");
-        } else {
-            System.out.println("not overlapping");
-        }
-        roomList.add(newRoom);
-        System.out.println("Room added to the plan!");
-        repaint(); // Repaint the canvas
-        System.out.println(this.roomList);
-    }
-    public void addRoom(String roomType, Pos pos, Dim dim) throws OverlapException {
+    private void createRoom(String roomType, Pos pos, Dim dim) throws OverlapException {
         Room newRoom = new Room(roomType, dim, pos);
         if (newRoom.checkOverlap(roomList)) {
             throw new OverlapException("Overlapping room");
-        } else {
-            System.out.println("not overlapping");
         }
         roomList.add(newRoom);
         System.out.println("Room added to the plan!");
-        repaint(); // Repaint the canvas
+        repaint();
+        mediator.canvasPanelAction("Add Room", newRoom);
         System.out.println(this.roomList);
+    }
+    public void addRoom(String roomType, Pos pos) throws OverlapException {
+        Dim dim = new Dim(150, 150);
+        createRoom(roomType, pos, dim);
+    }
+    public void addRoom(String roomType, Pos pos, Dim dim) throws OverlapException {
+        createRoom(roomType, pos, dim);
     }
     public void addRoom(String roomType) throws OverlapException {
         Pos pos = findSpace();
-        Room newRoom = new Room(roomType, new Dim(150, 150), pos);
-        if (newRoom.checkOverlap(roomList)) {
-            throw new OverlapException("Overlapping room");
-        } else {
-            System.out.println("not overlapping");
-        }
-        roomList.add(newRoom);
-        System.out.println("Room added to the plan!");
-        repaint(); // Repaint the canvas
-        System.out.println(this.roomList);
+        Dim dim = new Dim(150, 150);
+        createRoom(roomType, pos, dim);
     }
     public void addRoom(String roomType, Dim dim) throws OverlapException {
         Pos pos = findSpace();
-        Room newRoom = new Room(roomType, dim, pos);
-        if (newRoom.checkOverlap(roomList)) {
-            throw new OverlapException("Overlapping room");
-        } else {
-            System.out.println("not overlapping");
-        }
-        roomList.add(newRoom);
-        System.out.println("Room added to the plan!");
-        repaint(); // Repaint the canvas
-        System.out.println(this.roomList);
+        createRoom(roomType, pos, dim);
     }
 
     public void addFurniture() {

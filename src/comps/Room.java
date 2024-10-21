@@ -2,9 +2,10 @@ package comps;
 
 import java.awt.*;
 import javax.swing.*;
+import java.io.Serializable;
 import java.util.*;
 
-public class Room {
+public class Room implements Serializable {
     public String roomType;
     public Dim dim;
     public Pos pos; //top-left(?)
@@ -39,10 +40,10 @@ public class Room {
         roomColors.put("misc", new Color(222, 141, 255));
 
         Graphics2D g1 = (Graphics2D) g;
-        g.setColor(Color.BLACK); // Room border color
+        g.setColor(Color.BLACK);
         g1.setStroke(new BasicStroke(5));
         g.drawRect(pos.x, pos.y, dim.width, dim.height);
-        g.setColor(roomColors.get(this.roomType)); // Light blue fill color for the room
+        g.setColor(roomColors.get(this.roomType));
         g.fillRect(pos.x, pos.y, dim.width, dim.height);
 
         // Draw room type label in the center of the room
