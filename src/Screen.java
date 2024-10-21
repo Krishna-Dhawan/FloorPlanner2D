@@ -117,6 +117,9 @@ public class Screen extends JFrame {
             case "Add Furniture":
                 System.out.println(newRoom);
                 break;
+            case "Remove Room":
+                this.roomList.remove(newRoom);
+                break;
             default:
                 break;
         }
@@ -130,6 +133,8 @@ public class Screen extends JFrame {
         overlap.setVisible(true);
         overlap.setSize(200, 100);
     }
+
+    // TODO: Make the JFileChooser in normal mode instead of DIRECTORIES_ONLY
     public void savePlan() {
         JFileChooser chooser = new JFileChooser();
         File defaultDirectory = new File("./SavedPlans");

@@ -17,118 +17,135 @@ public class Plan extends Canvas {
         this.roomList = new ArrayList<>();
         setBackground(Color.WHITE);
 
-        // check mouse click
+        // Add the mouse listener
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                int x = e.getX();
-                int y = e.getY();
-                System.out.println(x + " " + y);
-
-                // check if it is right click, and which room is clicked
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    Room selectedRoom = null;
-                    for (Room room : roomList) {
-                        if (room.pos.x < x && x < room.pos.x + room.dim.width && room.pos.y < y && y < room.pos.y + room.dim.height) {
-                            System.out.println(room);
-                            selectedRoom = room;
-                        }
-                    }
-                    if (selectedRoom != null) {
-                        JPopupMenu popupMenu = new JPopupMenu();
-                        JMenuItem addRelativeRoom = new JMenuItem("Add Room Relative to this");
-
-                        // for adding room with position relative to other
-                        Room finalSelectedRoom = selectedRoom;
-                        addRelativeRoom.addActionListener(new ActionListener() {
-                            public void actionPerformed(ActionEvent e) {
-                                JDialog dialog = new JDialog(mediator);
-                                dialog.setTitle("Add Room Relative to this");
-
-                                ButtonGroup roomType = new ButtonGroup();
-                                JRadioButton livingRoom = new JRadioButton("Living Room");
-                                roomType.add(livingRoom);
-                                JRadioButton kitchen = new JRadioButton("Kitchen");
-                                roomType.add(kitchen);
-                                JRadioButton Bedroom = new JRadioButton("Bedroom");
-                                roomType.add(Bedroom);
-                                JRadioButton Bathroom = new JRadioButton("Bathroom");
-                                roomType.add(Bathroom);
-                                JRadioButton misc = new JRadioButton("Misc. Room");
-                                roomType.add(misc);
-
-                                JLabel hl = new JLabel("Height: ");
-                                JTextField h = new JTextField(10);
-                                JLabel wl = new JLabel("Width: ");
-                                JTextField w = new JTextField(10);
-
-                                JComboBox<String> news = new JComboBox<String>(new String[]{"North", "South", "East", "West"});
-
-                                JButton addRoomButton = new JButton("Add Room");
-                                addRoomButton.addActionListener( ev -> {
-                                    String selectedRoomType = "";
-                                    if (livingRoom.isSelected()) {
-                                        selectedRoomType = "living";
-                                    } else if (kitchen.isSelected()) {
-                                        selectedRoomType = "kitchen";
-                                    } else if (Bedroom.isSelected()) {
-                                        selectedRoomType = "bedroom";
-                                    } else if (Bathroom.isSelected()) {
-                                        selectedRoomType = "bath";
-                                    } else if (misc.isSelected()) {
-                                        selectedRoomType = "misc";
-                                    } else {
-                                        System.out.println("No room selected");
-                                    }
-                                    Pos newPos = switch (news.getSelectedIndex()) {
-                                        case 0 -> {
-                                            news.setSelectedIndex(0);
-                                            yield new Pos(finalSelectedRoom.pos.x, finalSelectedRoom.pos.y - Integer.parseInt(h.getText()));
-                                        }
-                                        case 1 -> {
-                                            news.setSelectedIndex(1);
-                                            yield new Pos(finalSelectedRoom.pos.x, finalSelectedRoom.pos.y + finalSelectedRoom.dim.height);
-                                        }
-                                        case 2 -> {
-                                            news.setSelectedIndex(2);
-                                            yield new Pos(finalSelectedRoom.pos.x + finalSelectedRoom.dim.width, finalSelectedRoom.pos.y);
-                                        }
-                                        case 3 -> {
-                                            news.setSelectedIndex(3);
-                                            yield new Pos(finalSelectedRoom.pos.x - Integer.parseInt(w.getText()), finalSelectedRoom.pos.y);
-                                        }
-                                        default -> new Pos(0, 0);
-                                    };
-                                    try {
-                                        addRoom(selectedRoomType, newPos, new Dim(Integer.parseInt(w.getText()), Integer.parseInt(h.getText())));
-                                    } catch (OverlapException ex) {
-                                        mediator.handleOverlapException();
-                                    }
-                                    dialog.dispose();
-                                });
-
-                                // TODO: Remove the layout and add setBounds to each element
-                                dialog.add(livingRoom);
-                                dialog.add(kitchen);
-                                dialog.add(Bedroom);
-                                dialog.add(Bathroom);
-                                dialog.add(misc);
-                                dialog.add(hl);
-                                dialog.add(h);
-                                dialog.add(wl);
-                                dialog.add(w);
-                                dialog.add(news);
-                                dialog.add(addRoomButton);
-                                dialog.setVisible(true);
-                                dialog.setSize(300, 300);
-                                dialog.setLayout(new FlowLayout());
-                            }
-                        });
-                        popupMenu.add(addRelativeRoom);
-                        showPopupMenu(popupMenu, x, y);
-                    }
-                }
+                handleMousePressed(e);
             }
         });
+    }
+
+    // Handle mouse press event (right-click)
+    private void handleMousePressed(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        System.out.println(x + " " + y);
+
+        if (SwingUtilities.isRightMouseButton(e)) {
+            Room selectedRoom = findRoomAtPosition(x, y);
+            if (selectedRoom != null) {
+                showRoomOptionsMenu(selectedRoom, x, y);
+            }
+        }
+    }
+
+    // Find a room at the clicked position
+    private Room findRoomAtPosition(int x, int y) {
+        for (Room room : roomList) {
+            if (room.pos.x < x && x < room.pos.x + room.dim.width &&
+                    room.pos.y < y && y < room.pos.y + room.dim.height) {
+                System.out.println(room);
+                return room;
+            }
+        }
+        return null;
+    }
+
+    // Show the popup menu with options related to the selected room on right-click
+    private void showRoomOptionsMenu(Room selectedRoom, int x, int y) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem addRelativeRoom = new JMenuItem("Add Room Relative to this");
+        JMenuItem removeRoom = new JMenuItem("Remove this Room");
+
+        addRelativeRoom.addActionListener(ev -> showAddRoomDialog(selectedRoom));
+        popupMenu.add(addRelativeRoom);
+
+        removeRoom.addActionListener(ev -> removeRoom(selectedRoom));
+        popupMenu.add(removeRoom);
+
+        showPopupMenu(popupMenu, x, y);
+    }
+
+    // Show a dialog to add a room relative to the selected room
+    private void showAddRoomDialog(Room selectedRoom) {
+        JDialog dialog = new JDialog(mediator);
+        dialog.setTitle("Add Room Relative to this");
+
+        ButtonGroup roomType = new ButtonGroup();
+        JRadioButton livingRoom = new JRadioButton("Living Room");
+        JRadioButton kitchen = new JRadioButton("Kitchen");
+        JRadioButton bedroom = new JRadioButton("Bedroom");
+        JRadioButton bathroom = new JRadioButton("Bathroom");
+        JRadioButton misc = new JRadioButton("Misc. Room");
+
+        roomType.add(livingRoom);
+        roomType.add(kitchen);
+        roomType.add(bedroom);
+        roomType.add(bathroom);
+        roomType.add(misc);
+
+        JLabel hl = new JLabel("Height: ");
+        JTextField h = new JTextField(10);
+        JLabel wl = new JLabel("Width: ");
+        JTextField w = new JTextField(10);
+
+        JComboBox<String> directions = new JComboBox<>(new String[]{"North", "South", "East", "West"});
+
+        JButton addRoomButton = new JButton("Add Room");
+        addRoomButton.addActionListener(ev -> {
+            String selectedRoomType = getSelectedRoomType(livingRoom, kitchen, bedroom, bathroom, misc);
+            if (selectedRoomType.isEmpty()) {
+                System.out.println("No room selected");
+                return;
+            }
+
+            Pos newPos = calculateNewRoomPosition(selectedRoom, directions, w, h);
+            try {
+                addRoom(selectedRoomType, newPos, new Dim(Integer.parseInt(w.getText()), Integer.parseInt(h.getText())));
+                dialog.dispose();
+            } catch (OverlapException ex) {
+                mediator.handleOverlapException();
+            }
+        });
+
+        // Add components to the dialog
+        // TODO: Remove the flow layout and add setBounds
+        dialog.setLayout(new FlowLayout());
+        dialog.add(livingRoom);
+        dialog.add(kitchen);
+        dialog.add(bedroom);
+        dialog.add(bathroom);
+        dialog.add(misc);
+        dialog.add(hl);
+        dialog.add(h);
+        dialog.add(wl);
+        dialog.add(w);
+        dialog.add(directions);
+        dialog.add(addRoomButton);
+        dialog.setSize(300, 300);
+        dialog.setVisible(true);
+    }
+
+    // Get the selected room type
+    private String getSelectedRoomType(JRadioButton livingRoom, JRadioButton kitchen, JRadioButton bedroom,
+                                       JRadioButton bathroom, JRadioButton misc) {
+        if (livingRoom.isSelected()) return "living";
+        if (kitchen.isSelected()) return "kitchen";
+        if (bedroom.isSelected()) return "bedroom";
+        if (bathroom.isSelected()) return "bath";
+        if (misc.isSelected()) return "misc";
+        return "";
+    }
+
+    // Calculate the new room position based on the direction and dimensions
+    private Pos calculateNewRoomPosition(Room selectedRoom, JComboBox<String> directions, JTextField w, JTextField h) {
+        return switch (directions.getSelectedIndex()) {
+            case 0 -> new Pos(selectedRoom.pos.x, selectedRoom.pos.y - Integer.parseInt(h.getText()));  // North
+            case 1 -> new Pos(selectedRoom.pos.x, selectedRoom.pos.y + selectedRoom.dim.height);        // South
+            case 2 -> new Pos(selectedRoom.pos.x + selectedRoom.dim.width, selectedRoom.pos.y);         // East
+            case 3 -> new Pos(selectedRoom.pos.x - Integer.parseInt(w.getText()), selectedRoom.pos.y);  // West
+            default -> new Pos(0, 0);
+        };
     }
     public void showPopupMenu(JPopupMenu popupMenu, int x, int y) {
         popupMenu.show(this, x, y);
@@ -192,6 +209,12 @@ public class Plan extends Canvas {
     public void addRoom(String roomType, Dim dim) throws OverlapException {
         Pos pos = findSpace();
         createRoom(roomType, pos, dim);
+    }
+
+    public void removeRoom(Room remRoom) {
+        roomList.remove(remRoom);
+        mediator.canvasPanelAction("Remove Room", remRoom);
+        repaint();
     }
 
     public void addFurniture() {
