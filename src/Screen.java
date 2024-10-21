@@ -99,13 +99,7 @@ public class Screen extends JFrame {
                     }
                     break;
                 } catch (OverlapException e) {
-                    System.out.println("OverlapError");
-                    JDialog overlap = new JDialog(this, "OverlapError");
-                    JLabel l = new JLabel("Overlapping Rooms. Change the position or dimensions.");
-                    overlap.add(l);
-                    overlap.setLocationRelativeTo(this);
-                    overlap.setVisible(true);
-                    overlap.setSize(200, 100);
+                    handleOverlapException();
                     break;
                 }
             case "Add Furniture":
@@ -126,6 +120,15 @@ public class Screen extends JFrame {
             default:
                 break;
         }
+    }
+    public void handleOverlapException() {
+        System.out.println("OverlapError");
+        JDialog overlap = new JDialog(this, "OverlapError");
+        JLabel l = new JLabel("Overlapping Rooms. Change the position or dimensions.");
+        overlap.add(l);
+        overlap.setLocationRelativeTo(this);
+        overlap.setVisible(true);
+        overlap.setSize(200, 100);
     }
     public void savePlan() {
         JFileChooser chooser = new JFileChooser();
@@ -181,7 +184,7 @@ public class Screen extends JFrame {
                     // e.printStackTrace();
                     System.out.println("IOException: " + err.getMessage());
                 }
-                setTitle("Floor Planner 2D" + (this.title.isEmpty()?"":" - " + this.title));
+                this.setTitle("Floor Planner 2D" + (this.title.isEmpty()?"":" - " + this.title));
                 fileNameDialog.dispose();
             });
 
