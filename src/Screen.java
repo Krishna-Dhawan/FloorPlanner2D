@@ -1,8 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import comps.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -54,9 +53,30 @@ public class Screen extends JFrame {
             }
         });
 
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                if (title.isEmpty() && !roomList.isEmpty()) {
+                    int confirmed = JOptionPane.showConfirmDialog(null,
+                            "Save before leaving?",
+                            "Exit Confirmation",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (confirmed == JOptionPane.NO_OPTION) {
+                        dispose();
+                        System.exit(0);
+                    } else {
+                        savePlan(true);
+                    }
+                } else {
+                    dispose();
+                    System.exit(0);
+                }
+            }
+        });
+
         setSize(1200, 800);
         setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
 
     private JMenuBar getjMenuBar() {
@@ -65,7 +85,7 @@ public class Screen extends JFrame {
         JMenuItem saveMenuItem = new JMenuItem("Save");
         JMenuItem loadMenuItem = new JMenuItem("Load");
         saveMenuItem.addActionListener( e -> {
-            savePlan();
+            savePlan(false);
         });
         loadMenuItem.addActionListener( e -> {
             loadPlan();
@@ -99,7 +119,7 @@ public class Screen extends JFrame {
                     }
                     break;
                 } catch (OverlapException e) {
-                    handleOverlapException();
+                    handleOverlapException(true);
                     break;
                 }
             case "Add Furniture":
@@ -120,11 +140,14 @@ public class Screen extends JFrame {
             case "Remove Room":
                 this.roomList.remove(newRoom);
                 break;
+            case "Snap Back":
+                plan.snapBack();
+                break;
             default:
                 break;
         }
     }
-    public void handleOverlapException() {
+    public void handleOverlapException(boolean isNewRoom) {
         System.out.println("OverlapError");
         JDialog overlap = new JDialog(this, "OverlapError");
         JLabel l = new JLabel("Overlapping Rooms. Change the position or dimensions.");
@@ -132,10 +155,18 @@ public class Screen extends JFrame {
         overlap.setLocationRelativeTo(this);
         overlap.setVisible(true);
         overlap.setSize(200, 100);
+        overlap.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                if (!isNewRoom) {
+                    canvasPanelAction("Snap Back", null);
+                }
+                overlap.dispose();
+            }
+        });
     }
 
     // TODO: Make the JFileChooser in normal mode instead of DIRECTORIES_ONLY
-    public void savePlan() {
+    public void savePlan(boolean exitOnClose) {
         JFileChooser chooser = new JFileChooser();
         File defaultDirectory = new File("./SavedPlans");
         chooser.setCurrentDirectory(defaultDirectory);
@@ -204,6 +235,10 @@ public class Screen extends JFrame {
         } else {
             System.out.println("No directory selected");
         }
+        if (exitOnClose) {
+            this.dispose();
+            System.exit(0);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -227,6 +262,7 @@ public class Screen extends JFrame {
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
+            this.title = selectedFile.getName();
         }
         this.roomList = loadedRooms;
         plan.fetchRoomList(this.roomList);

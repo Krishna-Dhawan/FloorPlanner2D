@@ -1,9 +1,6 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
 import comps.*;
 import javax.swing.*;
@@ -11,6 +8,11 @@ import javax.swing.*;
 public class Plan extends Canvas {
     public List<Room> roomList;
     public Screen mediator;
+
+    private Room selected_Room;
+    private Point initialPos;
+    private Point dynamicPos;
+    private boolean isDragging = false;
 
     public Plan(Screen mediator) {
         this.mediator = mediator;
@@ -21,6 +23,23 @@ public class Plan extends Canvas {
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 handleMousePressed(e);
+            }
+            public void mouseReleased(MouseEvent e) {
+                if (isDragging && selected_Room != null) {
+                    try{
+                        handleMouseRelease(e);
+                    } catch (OverlapException ex) {
+                        mediator.handleOverlapException(false);
+                    }
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                if (isDragging && selected_Room != null) {
+                    handleMouseDrag(e);
+                }
             }
         });
     }
@@ -36,7 +55,41 @@ public class Plan extends Canvas {
             if (selectedRoom != null) {
                 showRoomOptionsMenu(selectedRoom, x, y);
             }
+        } else if (SwingUtilities.isLeftMouseButton(e) && selected_Room != null) {
+            dynamicPos = e.getPoint();
+            isDragging = true;
         }
+    }
+
+    private void handleMouseDrag(MouseEvent e) {
+        int xMoved = e.getX() - dynamicPos.x;
+        int yMoved = e.getY() - dynamicPos.y;
+
+        selected_Room.pos.x += xMoved;
+        selected_Room.pos.y += yMoved;
+
+        dynamicPos = e.getPoint();
+
+        repaint();
+    }
+
+    private void handleMouseRelease(MouseEvent e) throws OverlapException{
+        isDragging = false;
+        java.util.List<Room> excludedRoomList = new java.util.ArrayList<>();
+        for (Room room : roomList) {
+            if (room != selected_Room) {
+                excludedRoomList.add(room);
+            }
+        }
+        if (selected_Room.checkOverlap(excludedRoomList)) {
+            throw new OverlapException("Overlapping room");
+        }
+        selected_Room = null;
+    }
+
+    public void snapBack() {
+        selected_Room.pos = new Pos(initialPos.x, initialPos.y);
+        repaint();
     }
 
     // Find a room at the clicked position
@@ -55,10 +108,14 @@ public class Plan extends Canvas {
     private void showRoomOptionsMenu(Room selectedRoom, int x, int y) {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem addRelativeRoom = new JMenuItem("Add Room Relative to this");
+        JMenuItem moveRoom = new JMenuItem("Move Room");
         JMenuItem removeRoom = new JMenuItem("Remove this Room");
 
         addRelativeRoom.addActionListener(ev -> showAddRoomDialog(selectedRoom));
         popupMenu.add(addRelativeRoom);
+
+        moveRoom.addActionListener(ev -> {selected_Room = selectedRoom; initialPos = new Point(selectedRoom.pos.x, selectedRoom.pos.y);});
+        popupMenu.add(moveRoom);
 
         removeRoom.addActionListener(ev -> removeRoom(selectedRoom));
         popupMenu.add(removeRoom);
@@ -104,7 +161,7 @@ public class Plan extends Canvas {
                 addRoom(selectedRoomType, newPos, new Dim(Integer.parseInt(w.getText()), Integer.parseInt(h.getText())));
                 dialog.dispose();
             } catch (OverlapException ex) {
-                mediator.handleOverlapException();
+                mediator.handleOverlapException(true);
             }
         });
 
