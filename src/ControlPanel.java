@@ -53,10 +53,6 @@ public class ControlPanel extends Component {
         w.setBounds(180, 170, 50, 30);
         cp.add(w);
 
-        JTextField z = new JTextField(10);
-        z.setBounds(180, 210, 50, 30);
-        cp.add(z);
-
         r1.addActionListener(e -> {
             String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
             mediator.controlPanelAction("Add Room", "bath", vals);
@@ -101,5 +97,31 @@ public class ControlPanel extends Component {
         JButton f5 = new JButton("Add Misc. Room");
         f5.setBounds(10, 460, 150, 30);
         cp.add(f5);
+
+        JTextField r = new JTextField(10);
+        r.setBounds(180, 210, 50, 30);
+        r.setText("0");
+        cp.add(r);
+
+        f1.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
+            mediator.controlPanelAction("Add Furniture", "bed", vals);
+        });
+        f2.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
+            mediator.controlPanelAction("Add Furniture", "chair", vals);
+        });
+        f3.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
+            mediator.controlPanelAction("Add Furniture", "dining_set", vals);
+        });
+        f4.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
+            mediator.controlPanelAction("Add Furniture", "sofa", vals);
+        });
+        f5.addActionListener(e -> {
+            String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
+            mediator.controlPanelAction("Add Furniture", "table", vals);
+        });
     }
 }

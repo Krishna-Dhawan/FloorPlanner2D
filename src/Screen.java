@@ -74,7 +74,8 @@ public class Screen extends JFrame {
             }
         });
 
-        setSize(1200, 800);
+//        setSize(1200, 800);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setVisible(true);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
