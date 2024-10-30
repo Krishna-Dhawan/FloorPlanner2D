@@ -124,8 +124,12 @@ public class Screen extends JFrame {
                     break;
                 }
             case "Add Furniture":
-                plan.addFurniture();
-                break;
+                try {
+                    plan.addFurniture(type, vals);
+                    break;
+                } catch (OverlapException e) {
+                    handleOverlapException(true);
+                }
             default:
                 break;
         }
@@ -192,7 +196,7 @@ public class Screen extends JFrame {
                     JDialog emptyListDialog = new JDialog(this, "Empty Canvas");
                     JLabel emptyListLabel = new JLabel("There is nothing to save.");
                     JButton ok = new JButton("OK");
-                    ok.addActionListener( ev -> {emptyListDialog.dispose();});
+                    ok.addActionListener( ev -> emptyListDialog.dispose());
                     emptyListDialog.add(emptyListLabel);
                     emptyListDialog.add(ok);
 

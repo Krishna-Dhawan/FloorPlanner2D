@@ -7,6 +7,7 @@ import javax.swing.*;
 
 public class Plan extends Canvas {
     public List<Room> roomList;
+    public List<Furniture> furnitureList;
     public Screen mediator;
 
     private Room selected_Room;
@@ -17,6 +18,7 @@ public class Plan extends Canvas {
     public Plan(Screen mediator) {
         this.mediator = mediator;
         this.roomList = new ArrayList<>();
+        this.furnitureList = new ArrayList<>();
         setBackground(Color.WHITE);
 
         // Add the mouse listener
@@ -218,6 +220,9 @@ public class Plan extends Canvas {
         for (Room room : roomList) {
             room.draw(g);
         }
+        for (Furniture furniture: furnitureList) {
+            furniture.draw(g);
+        }
     }
 
     // find the next free space according to row-major order
@@ -274,8 +279,12 @@ public class Plan extends Canvas {
         repaint();
     }
 
-    public void addFurniture() {
+    public void addFurniture(String type, String[] vals) throws OverlapException {
         System.out.println("Furniture added to the plan!");
+        Dim dim = (vals[3].isEmpty() && vals[4].isEmpty())? new Dim(Integer.parseInt(vals[3]), Integer.parseInt(vals[2])): new Dim(50, 50);
+        Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+        int rotation = Integer.parseInt(vals[4]);
+        furnitureList.add(new Furniture(type, dim, pos, rotation, roomList));
         repaint();
     }
 
