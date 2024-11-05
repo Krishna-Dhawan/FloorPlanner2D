@@ -11,6 +11,7 @@ public class Plan extends Canvas {
     public Screen mediator;
 
     private Room selected_Room;
+    private Furniture selected_Furniture;
     private Point initialPos;
     private Point dynamicPos;
     private boolean isDragging = false;
@@ -27,7 +28,7 @@ public class Plan extends Canvas {
                 handleMousePressed(e);
             }
             public void mouseReleased(MouseEvent e) {
-                if (isDragging && selected_Room != null) {
+                if (isDragging && (selected_Room != null || selected_Furniture != null)) {
                     try{
                         handleMouseRelease(e);
                     } catch (OverlapException ex) {
@@ -39,7 +40,7 @@ public class Plan extends Canvas {
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
-                if (isDragging && selected_Room != null) {
+                if (isDragging && (selected_Room != null || selected_Furniture != null)) {
                     handleMouseDrag(e);
                 }
             }
@@ -57,7 +58,11 @@ public class Plan extends Canvas {
             if (selectedRoom != null) {
                 showRoomOptionsMenu(selectedRoom, x, y);
             }
-        } else if (SwingUtilities.isLeftMouseButton(e) && selected_Room != null) {
+            Furniture selectedFurniture = findFurnitureAtPosition(x, y);
+            if (selectedFurniture != null) {
+                showFurnitureOptionsMenu(selectedFurniture, x, y);
+            }
+        } else if (SwingUtilities.isLeftMouseButton(e) && (selected_Room != null || selected_Furniture != null)) {
             dynamicPos = e.getPoint();
             isDragging = true;
         }
@@ -67,8 +72,13 @@ public class Plan extends Canvas {
         int xMoved = e.getX() - dynamicPos.x;
         int yMoved = e.getY() - dynamicPos.y;
 
-        selected_Room.pos.x += xMoved;
-        selected_Room.pos.y += yMoved;
+        if (selected_Room != null) {
+            selected_Room.pos.x += xMoved;
+            selected_Room.pos.y += yMoved;
+        } else {
+            selected_Furniture.pos.x += xMoved;
+            selected_Furniture.pos.y += yMoved;
+        }
 
         dynamicPos = e.getPoint();
 
@@ -77,30 +87,65 @@ public class Plan extends Canvas {
 
     private void handleMouseRelease(MouseEvent e) throws OverlapException{
         isDragging = false;
-        java.util.List<Room> excludedRoomList = new java.util.ArrayList<>();
-        for (Room room : roomList) {
-            if (room != selected_Room) {
-                excludedRoomList.add(room);
+        if (selected_Room != null) {
+            java.util.List<Room> excludedRoomList = new java.util.ArrayList<>();
+            for (Room room : roomList) {
+                if (room != selected_Room) {
+                    excludedRoomList.add(room);
+                }
+            }
+            if (selected_Room.checkOverlap(excludedRoomList)) {
+                throw new OverlapException("Overlapping room");
+            }
+            selected_Room = null;
+        } else {
+            java.util.List<Furniture> excludedFurnitureList = new java.util.ArrayList<>();
+            for (Furniture furniture : furnitureList) {
+                if (furniture != selected_Furniture) {
+                    excludedFurnitureList.add(furniture);
+                }
+            }
+            if (selected_Furniture.checkOverlap(excludedFurnitureList)) {
+                throw new OverlapException("Overlapping furniture");
             }
         }
-        if (selected_Room.checkOverlap(excludedRoomList)) {
-            throw new OverlapException("Overlapping room");
-        }
-        selected_Room = null;
     }
 
     public void snapBack() {
-        selected_Room.pos = new Pos(initialPos.x, initialPos.y);
+        if (selected_Room != null) {
+            selected_Room.pos = new Pos(initialPos.x, initialPos.y);
+            selected_Room = null;
+        } else {
+            selected_Furniture.pos = new Pos(initialPos.x, initialPos.y);
+            selected_Furniture = null;
+        }
         repaint();
     }
 
-    // Find a room at the clicked position
+    // Find a room at the clicked position, do not select the room if clicked on the furniture
     private Room findRoomAtPosition(int x, int y) {
+        Room foundRoom = null;
         for (Room room : roomList) {
             if (room.pos.x < x && x < room.pos.x + room.dim.width &&
                     room.pos.y < y && y < room.pos.y + room.dim.height) {
                 System.out.println(room);
-                return room;
+                foundRoom = room;
+            }
+        }
+        // if furniture was clicked that happened to be in the room
+        Furniture foundFurniture = findFurnitureAtPosition(x, y);
+        if (foundFurniture != null) {
+            return null;
+        }
+        return foundRoom;
+    }
+
+    private Furniture findFurnitureAtPosition(int x, int y) {
+        for (Furniture furniture : furnitureList) {
+            if (furniture.pos.x < x && x < furniture.pos.x + furniture.dim.width &&
+                    furniture.pos.y < y && y < furniture.pos.y + furniture.dim.height) {
+                System.out.println(furniture);
+                return furniture;
             }
         }
         return null;
@@ -121,6 +166,24 @@ public class Plan extends Canvas {
 
         removeRoom.addActionListener(ev -> removeRoom(selectedRoom));
         popupMenu.add(removeRoom);
+
+        showPopupMenu(popupMenu, x, y);
+    }
+
+    private void showFurnitureOptionsMenu(Furniture selectedFurniture, int x, int y) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem moveFurnitureOption = new JMenuItem("Move Furniture");
+        JMenuItem resizeFurnitureOption = new JMenuItem("Resize Furniture");
+        JMenuItem removeFurnitureOption = new JMenuItem("Remove Furniture");
+
+        moveFurnitureOption.addActionListener(ev -> {selected_Furniture = selectedFurniture; initialPos = new Point(selectedFurniture.pos.x, selectedFurniture.pos.y);});
+        popupMenu.add(moveFurnitureOption);
+
+        resizeFurnitureOption.addActionListener(ev -> showResizeFurnitureDialog(selectedFurniture));
+        popupMenu.add(resizeFurnitureOption);
+
+        removeFurnitureOption.addActionListener(ev -> removeFurniture(selectedFurniture));
+        popupMenu.add(removeFurnitureOption);
 
         showPopupMenu(popupMenu, x, y);
     }
@@ -214,6 +277,10 @@ public class Plan extends Canvas {
         this.roomList = roomList;
         repaint();
     }
+    public void fetchFurnitureList(List<Furniture> furnitureList) {
+        this.furnitureList = furnitureList;
+        repaint();
+    }
 
     public void paint(Graphics g) {
         // super.paintComponent(g);
@@ -279,6 +346,12 @@ public class Plan extends Canvas {
         repaint();
     }
 
+    public void removeFurniture(Furniture remFurniture) {
+        furnitureList.remove(remFurniture);
+        mediator.canvasPanelAction("Remove Furniture", remFurniture);
+        repaint();
+    }
+
     public void addFurniture(String type, String[] vals) throws OverlapException {
         System.out.println("Furniture added to the plan!");
         Dim dim = (vals[3].isEmpty() && vals[4].isEmpty())? new Dim(Integer.parseInt(vals[3]), Integer.parseInt(vals[2])): new Dim(50, 50);
@@ -286,6 +359,53 @@ public class Plan extends Canvas {
         int rotation = Integer.parseInt(vals[4]);
         furnitureList.add(new Furniture(type, dim, pos, rotation, roomList));
         repaint();
+    }
+
+    private void resizeFurniture(Furniture furniture, int h, int w) throws OverlapException{
+        furniture.dim.height = h;
+        furniture.dim.width = w;
+        java.util.List<Furniture> excludedFurnitureList = new ArrayList<>();
+        for (Furniture f : furnitureList) {
+            if (f != furniture) {
+                excludedFurnitureList.add(f);
+            }
+        }
+        if (furniture.checkOverlap(excludedFurnitureList)) {
+            throw new OverlapException("Overlap Error");
+        }
+        repaint();
+    }
+
+    private void showResizeFurnitureDialog(Furniture furniture) {
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Resize Furniture");
+
+        JLabel heightLabel = new JLabel("Height:");
+        JTextField heightField = new JTextField(String.valueOf(furniture.dim.height), 10);
+        JLabel widthLabel = new JLabel("Width:");
+        JTextField widthField = new JTextField(String.valueOf(furniture.dim.width), 10);
+
+        JButton resizeButton = new JButton("Resize");
+        resizeButton.addActionListener(ev -> {
+            try {
+                int h = Integer.parseInt(heightField.getText());
+                int w = Integer.parseInt(widthField.getText());
+                resizeFurniture(furniture, h, w);
+            } catch (OverlapException ex) {
+                mediator.handleOverlapException(false);
+            }
+            dialog.dispose();
+        });
+
+        dialog.add(heightLabel);
+        dialog.add(heightField);
+        dialog.add(widthLabel);
+        dialog.add(widthField);
+        dialog.add(resizeButton);
+
+        dialog.setLayout(new FlowLayout());
+        dialog.setSize(300, 200);
+        dialog.setVisible(true);
     }
 
 }

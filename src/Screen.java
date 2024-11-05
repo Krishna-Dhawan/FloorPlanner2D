@@ -9,8 +9,8 @@ public class Screen extends JFrame {
     private String title = "";
 
     private final Plan plan;
-    public java.util.List<Room> roomList = new ArrayList<Room>();
-    // public java.util.List<Furniture> furnitureList;
+    public java.util.List<Room> roomList = new ArrayList<>();
+     public java.util.List<Furniture> furnitureList = new ArrayList<>();
 
     public Screen() {
         setTitle("Floor Planner 2D" + (this.title.isEmpty()?"":" - " + this.title));
@@ -152,6 +152,24 @@ public class Screen extends JFrame {
                 break;
         }
     }
+    public void canvasPanelAction(String action, Furniture newFurniture) {
+        switch (action) {
+            case "Add Room":
+                this.furnitureList.add(newFurniture);
+                break;
+            case "Add Furniture":
+                System.out.println(newFurniture);
+                break;
+            case "Remove Furniture":
+                this.furnitureList.remove(newFurniture);
+                break;
+            case "Snap Back":
+                plan.snapBack();
+                break;
+            default:
+                break;
+        }
+    }
     public void handleOverlapException(boolean isNewRoom) {
         System.out.println("OverlapError");
         JDialog overlap = new JDialog(this, "OverlapError");
@@ -159,11 +177,12 @@ public class Screen extends JFrame {
         overlap.add(l);
         overlap.setLocationRelativeTo(this);
         overlap.setVisible(true);
-        overlap.setSize(200, 100);
+        overlap.setSize(300, 100);
         overlap.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 if (!isNewRoom) {
-                    canvasPanelAction("Snap Back", null);
+                    Room x = null;
+                    canvasPanelAction("Snap Back", x);
                 }
                 overlap.dispose();
             }
@@ -208,7 +227,7 @@ public class Screen extends JFrame {
                     JDialog emptyNameDialog = new JDialog(this, "no file name entered");
                     JLabel emptyNameLabel = new JLabel("Please Enter a file name");
                     JButton ok = new JButton("OK");
-                    ok.addActionListener( ev -> {emptyNameDialog.dispose();});
+                    ok.addActionListener( ev -> emptyNameDialog.dispose());
                     emptyNameDialog.add(emptyNameLabel);
                     emptyNameDialog.add(ok);
 
@@ -220,6 +239,7 @@ public class Screen extends JFrame {
 
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                     oos.writeObject(roomList);
+                    oos.writeObject(furnitureList);
                     System.out.println("Room list saved to: " + file.getAbsolutePath());
                 } catch (IOException err) {
                     // e.printStackTrace();
@@ -249,6 +269,7 @@ public class Screen extends JFrame {
     @SuppressWarnings("unchecked")
     public void loadPlan() {
         java.util.List<Room> loadedRooms = new ArrayList<>();
+        java.util.List<Furniture> loadedFurnitures = new ArrayList<>();
 
         JFileChooser chooser = new JFileChooser();
         File defaultDirectory = new File("./SavedPlans");
@@ -261,6 +282,7 @@ public class Screen extends JFrame {
 
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
                 loadedRooms = (java.util.List<Room>) ois.readObject();
+                loadedFurnitures = (java.util.List<Furniture>) ois.readObject();
                 System.out.println("Room list loaded from: " + selectedFile.getAbsolutePath());
             } catch(IOException err) {
                 System.out.println("IOException: " + err.getMessage());
@@ -270,6 +292,8 @@ public class Screen extends JFrame {
             this.title = selectedFile.getName();
         }
         this.roomList = loadedRooms;
+        this.furnitureList = loadedFurnitures;
         plan.fetchRoomList(this.roomList);
+        plan.fetchFurnitureList(this.furnitureList);
     }
 }
