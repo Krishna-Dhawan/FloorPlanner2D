@@ -39,9 +39,9 @@ public class Room implements Serializable {
 
     public void draw(Graphics g) {
         Graphics2D g1 = (Graphics2D) g;
-        g.setColor(Color.BLACK);
-        g1.setStroke(new BasicStroke(5));
-        g.drawRect(pos.x, pos.y, dim.width, dim.height);
+        // g.setColor(Color.BLACK);
+        // g1.setStroke(new BasicStroke(5));
+        // g.drawRect(pos.x, pos.y, dim.width, dim.height);
         g.setColor(roomColors.get(this.roomType));
         g.fillRect(pos.x, pos.y, dim.width, dim.height);
 

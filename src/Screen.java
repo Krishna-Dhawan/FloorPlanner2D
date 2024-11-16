@@ -10,7 +10,8 @@ public class Screen extends JFrame {
 
     private final Plan plan;
     public java.util.List<Room> roomList = new ArrayList<>();
-     public java.util.List<Furniture> furnitureList = new ArrayList<>();
+    public java.util.List<Furniture> furnitureList = new ArrayList<>();
+    public java.util.List<Wall> wallList = new ArrayList<>();
 
     public Screen() {
         setTitle("Floor Planner 2D" + (this.title.isEmpty()?"":" - " + this.title));
@@ -29,7 +30,7 @@ public class Screen extends JFrame {
         plan = p;
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 0.75; // 75% of horizontal space
+        gbc.weightx = 0.70; // 75% of horizontal space
         gbc.weighty = 1.0; // Full vertical space
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
@@ -39,7 +40,7 @@ public class Screen extends JFrame {
         ControlPanel cp = new ControlPanel(this);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.25; // 25% of horizontal space
+        gbc.weightx = 0.3; // 25% of horizontal space
         gbc.weighty = 1.0;
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
@@ -191,6 +192,8 @@ public class Screen extends JFrame {
 
     // TODO: Make the JFileChooser in normal mode instead of DIRECTORIES_ONLY
     public void savePlan(boolean exitOnClose) {
+        wallList = plan.wallList;
+
         JFileChooser chooser = new JFileChooser();
         File defaultDirectory = new File("./SavedPlans");
         chooser.setCurrentDirectory(defaultDirectory);
@@ -240,6 +243,7 @@ public class Screen extends JFrame {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                     oos.writeObject(roomList);
                     oos.writeObject(furnitureList);
+                    oos.writeObject(wallList);
                     System.out.println("Room list saved to: " + file.getAbsolutePath());
                 } catch (IOException err) {
                     // e.printStackTrace();
@@ -270,6 +274,7 @@ public class Screen extends JFrame {
     public void loadPlan() {
         java.util.List<Room> loadedRooms = new ArrayList<>();
         java.util.List<Furniture> loadedFurnitures = new ArrayList<>();
+        java.util.List<Wall> loadedWalls = new ArrayList<>();
 
         JFileChooser chooser = new JFileChooser();
         File defaultDirectory = new File("./SavedPlans");
@@ -283,6 +288,7 @@ public class Screen extends JFrame {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
                 loadedRooms = (java.util.List<Room>) ois.readObject();
                 loadedFurnitures = (java.util.List<Furniture>) ois.readObject();
+                loadedWalls = (java.util.List<Wall>) ois.readObject();
                 System.out.println("Room list loaded from: " + selectedFile.getAbsolutePath());
             } catch(IOException err) {
                 System.out.println("IOException: " + err.getMessage());
@@ -293,7 +299,9 @@ public class Screen extends JFrame {
         }
         this.roomList = loadedRooms;
         this.furnitureList = loadedFurnitures;
+        this.wallList = loadedWalls;
         plan.fetchRoomList(this.roomList);
         plan.fetchFurnitureList(this.furnitureList);
+        plan.fetchWallList(this.wallList);
     }
 }

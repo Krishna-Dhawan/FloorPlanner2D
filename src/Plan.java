@@ -8,6 +8,7 @@ import javax.swing.*;
 public class Plan extends Canvas {
     public List<Room> roomList;
     public List<Furniture> furnitureList;
+    public List<Wall> wallList;
     public Screen mediator;
 
     private Room selected_Room;
@@ -20,6 +21,7 @@ public class Plan extends Canvas {
         this.mediator = mediator;
         this.roomList = new ArrayList<>();
         this.furnitureList = new ArrayList<>();
+        this.wallList = new ArrayList<>();
         setBackground(Color.WHITE);
 
         // Add the mouse listener
@@ -48,6 +50,60 @@ public class Plan extends Canvas {
     }
 
     // Handle mouse press event (right-click)
+    private static final int WALL_THICKNESS_TOLERANCE = 6; // Tolerance for wall thickness
+
+    // Check if the click is within a wall's thickness range
+    private Wall findWallAtPosition(int x, int y) {
+        for (Wall wall : wallList) {
+            if (isNearWall(wall, x, y)) {
+                return wall;
+            }
+        }
+        return null;
+    }
+
+    // Helper method to check if (x, y) is near a given wall within tolerance
+    private boolean isNearWall(Wall wall, int x, int y) {
+        if (wall.p1.y == wall.p2.y) {  // Horizontal wall
+            int minX = Math.min(wall.p1.x, wall.p2.x);
+            int maxX = Math.max(wall.p1.x, wall.p2.x);
+            return x >= minX && x <= maxX && Math.abs(y - wall.p1.y) <= WALL_THICKNESS_TOLERANCE;
+        } else if (wall.p1.x == wall.p2.x) {  // Vertical wall
+            int minY = Math.min(wall.p1.y, wall.p2.y);
+            int maxY = Math.max(wall.p1.y, wall.p2.y);
+            return y >= minY && y <= maxY && Math.abs(x - wall.p1.x) <= WALL_THICKNESS_TOLERANCE;
+        }
+        return false;
+    }
+
+    // Modify findRoomAtPosition to detect if a wall was clicked
+    private Room findRoomAtPosition(int x, int y) {
+        // Check if a wall is clicked, if so return null
+        Wall clickedWall = findWallAtPosition(x, y);
+        if (clickedWall != null) {
+            System.out.println("Wall clicked: " + clickedWall);
+            return null;
+        }
+
+        // If no wall is clicked, continue with room detection
+        Room foundRoom = null;
+        for (Room room : roomList) {
+            if (room.pos.x < x && x < room.pos.x + room.dim.width &&
+                    room.pos.y < y && y < room.pos.y + room.dim.height) {
+                System.out.println(room);
+                foundRoom = room;
+            }
+        }
+
+        // Check if furniture is clicked, if so return null
+        Furniture foundFurniture = findFurnitureAtPosition(x, y);
+        if (foundFurniture != null) {
+            return null;
+        }
+        return foundRoom;
+    }
+
+    // Modify handleMousePressed to show wall options if a wall is clicked
     private void handleMousePressed(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
@@ -57,16 +113,23 @@ public class Plan extends Canvas {
             Room selectedRoom = findRoomAtPosition(x, y);
             if (selectedRoom != null) {
                 showRoomOptionsMenu(selectedRoom, x, y);
-            }
-            Furniture selectedFurniture = findFurnitureAtPosition(x, y);
-            if (selectedFurniture != null) {
-                showFurnitureOptionsMenu(selectedFurniture, x, y);
+            } else {
+                Wall selectedWall = findWallAtPosition(x, y);
+                if (selectedWall != null) {
+                    showWallOptionsMenu(selectedWall, x, y); // Implement wall options menu
+                } else {
+                    Furniture selectedFurniture = findFurnitureAtPosition(x, y);
+                    if (selectedFurniture != null) {
+                        showFurnitureOptionsMenu(selectedFurniture, x, y);
+                    }
+                }
             }
         } else if (SwingUtilities.isLeftMouseButton(e) && (selected_Room != null || selected_Furniture != null)) {
             dynamicPos = e.getPoint();
             isDragging = true;
         }
     }
+
 
     private void handleMouseDrag(MouseEvent e) {
         int xMoved = e.getX() - dynamicPos.x;
@@ -97,6 +160,8 @@ public class Plan extends Canvas {
             if (selected_Room.checkOverlap(excludedRoomList)) {
                 throw new OverlapException("Overlapping room");
             }
+            addWallsAround(selected_Room);
+            repaint();
             selected_Room = null;
         } else {
             java.util.List<Furniture> excludedFurnitureList = new java.util.ArrayList<>();
@@ -114,30 +179,13 @@ public class Plan extends Canvas {
     public void snapBack() {
         if (selected_Room != null) {
             selected_Room.pos = new Pos(initialPos.x, initialPos.y);
+            addWallsAround(selected_Room);
             selected_Room = null;
         } else {
             selected_Furniture.pos = new Pos(initialPos.x, initialPos.y);
             selected_Furniture = null;
         }
         repaint();
-    }
-
-    // Find a room at the clicked position, do not select the room if clicked on the furniture
-    private Room findRoomAtPosition(int x, int y) {
-        Room foundRoom = null;
-        for (Room room : roomList) {
-            if (room.pos.x < x && x < room.pos.x + room.dim.width &&
-                    room.pos.y < y && y < room.pos.y + room.dim.height) {
-                System.out.println(room);
-                foundRoom = room;
-            }
-        }
-        // if furniture was clicked that happened to be in the room
-        Furniture foundFurniture = findFurnitureAtPosition(x, y);
-        if (foundFurniture != null) {
-            return null;
-        }
-        return foundRoom;
     }
 
     private Furniture findFurnitureAtPosition(int x, int y) {
@@ -184,6 +232,19 @@ public class Plan extends Canvas {
 
         removeFurnitureOption.addActionListener(ev -> removeFurniture(selectedFurniture));
         popupMenu.add(removeFurnitureOption);
+
+        showPopupMenu(popupMenu, x, y);
+    }
+
+    private void showWallOptionsMenu (Wall selectedWall, int x, int y) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem addWinOption = new JMenuItem("Add Window");
+        JMenuItem addDoorOption = new JMenuItem("Add Door");
+
+        addWinOption.addActionListener(ev -> addSection(selectedWall, x, y, "win"));
+        popupMenu.add(addWinOption);
+        addDoorOption.addActionListener(ev -> addSection(selectedWall, x, y, "door"));
+        popupMenu.add(addDoorOption);
 
         showPopupMenu(popupMenu, x, y);
     }
@@ -269,6 +330,55 @@ public class Plan extends Canvas {
             default -> new Pos(0, 0);
         };
     }
+
+    private void addSection(Wall selectedWall, int x, int y, String type) {
+        JDialog addWinDialog = new JDialog(mediator);
+        addWinDialog.setTitle("Add " + ((type.equals("win"))? "Window": "Door"));
+
+        JLabel wl = new JLabel("Width: ");
+        JTextField w = new JTextField(10); // Input field for window width
+        JButton ok = new JButton("OK");
+
+        ok.addActionListener(ev -> {
+            try {
+                int width = Integer.parseInt(w.getText()); // Get width from user input
+
+                // Calculate the start position relative to the wall
+                int start = calculateStartPosition(selectedWall, x, y);
+
+                // Add the window to the wall
+                if ((type.equals("win"))) {
+                    selectedWall.addWindow(start, width);
+                } else {
+                    selectedWall.addDoor(start, width);
+                }
+                repaint();
+                // Close the dialog
+                addWinDialog.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(addWinDialog, "Invalid width. Please enter a number.");
+            }
+        });
+
+        // Layout the dialog
+        addWinDialog.setLayout(new FlowLayout());
+        addWinDialog.add(wl);
+        addWinDialog.add(w);
+        addWinDialog.add(ok);
+        addWinDialog.setSize(300, 150);
+        addWinDialog.setVisible(true);
+    }
+
+    // Helper function to calculate the start position relative to the wall
+    private int calculateStartPosition(Wall wall, int x, int y) {
+        if (wall.p1.y == wall.p2.y) { // Horizontal wall
+            return Math.abs(x - wall.p1.x);
+        } else if (wall.p1.x == wall.p2.x) { // Vertical wall
+            return Math.abs(y - wall.p1.y);
+        }
+        return 0; // Default case (shouldn't occur for strictly horizontal/vertical walls)
+    }
+
     public void showPopupMenu(JPopupMenu popupMenu, int x, int y) {
         popupMenu.show(this, x, y);
     }
@@ -281,6 +391,10 @@ public class Plan extends Canvas {
         this.furnitureList = furnitureList;
         repaint();
     }
+    public void fetchWallList(List<Wall> wallList) {
+        this.wallList = wallList;
+        repaint();
+    }
 
     public void paint(Graphics g) {
         // super.paintComponent(g);
@@ -290,6 +404,93 @@ public class Plan extends Canvas {
         for (Furniture furniture: furnitureList) {
             furniture.draw(g);
         }
+        java.util.Iterator<Wall> iterator = wallList.iterator();
+        while (iterator.hasNext()) {
+            Wall wall = iterator.next();
+            boolean isAdjacent = false;
+            // Check if the wall is adjacent to any room
+            // also, account for cases where a room with larger wall was deleted
+            // which was adjacent to a room with smaller edge
+            Pos cP1 = new Pos(0, 0);
+            Pos cP2 = new Pos(0, 0);
+            for (Room room : roomList) {
+                if ((wall.p1.x == room.pos.x && wall.p2.x == room.pos.x && wall.p1.y < room.pos.y + room.dim.height && wall.p2.y > room.pos.y) ||  // Left wall
+                        (wall.p1.x == room.pos.x + room.dim.width && wall.p2.x == room.pos.x + room.dim.width && wall.p1.y < room.pos.y + room.dim.height && wall.p2.y > room.pos.y) ||  // Right wall
+                        (wall.p1.y == room.pos.y && wall.p2.y == room.pos.y && wall.p1.x < room.pos.x + room.dim.width && wall.p2.x > room.pos.x) ||  // Top wall
+                        (wall.p1.y == room.pos.y + room.dim.height && wall.p2.y == room.pos.y + room.dim.height && wall.p1.x < room.pos.x + room.dim.width && wall.p2.x > room.pos.x)  // Bottom wall
+                ) {
+                    isAdjacent = true;
+                    Pos tP1 = new Pos(0, 0);
+                    Pos tP2 = new Pos(0, 0);
+                    if (wall.p1.x == room.pos.x && wall.p2.x == room.pos.x && wall.p1.y < room.pos.y + room.dim.height) {
+                        tP1 = new Pos(room.pos.x, room.pos.y);
+                        tP2 = new Pos(room.pos.x, room.pos.y + room.dim.height);
+                    } else if (wall.p1.x == room.pos.x + room.dim.width && wall.p2.x == room.pos.x + room.dim.width && wall.p1.y < room.pos.y + room.dim.height && wall.p2.y > room.pos.y) {
+                        tP1 = new Pos(room.pos.x + room.dim.width, room.pos.y);
+                        tP2 = new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height);
+                    } else if (wall.p1.y == room.pos.y && wall.p2.y == room.pos.y && wall.p1.x < room.pos.x + room.dim.width) {
+                        tP1 = new Pos(room.pos.x, room.pos.y);
+                        tP2 = new Pos(room.pos.x + room.dim.width, room.pos.y);
+                    } else if (wall.p1.y == room.pos.y + room.dim.height && wall.p2.y == room.pos.y + room.dim.height && wall.p1.x < room.pos.x + room.dim.width && wall.p2.x > room.pos.x) {
+                        tP1 = new Pos(room.pos.x, room.pos.y + room.dim.height);
+                        tP2 = new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height);
+                    }
+                    if (getLength(tP1, tP2) > getLength(cP1, cP2)) {
+                        cP1 = tP1;
+                        cP2 = tP2;
+                        wall.p1 = cP1;
+                        wall.p2 = cP2;
+                    }
+                }
+            }
+            if (!isAdjacent) {
+                iterator.remove();
+            }
+        }
+        for (Room room : roomList) {
+            int leftCount = 0;
+            int topCount = 0;
+            int rightCount = 0;
+            int bottomCount = 0;
+
+            java.util.Iterator<Wall> iterator2 = wallList.iterator();
+            while (iterator2.hasNext()) {
+                Wall wall = iterator2.next();
+                if (wall.p1.x == room.pos.x && wall.p2.x == room.pos.x &&
+                        wall.p1.y >= room.pos.y && wall.p2.y <= room.pos.y + room.dim.height) {
+                    leftCount++;
+                    if (leftCount > 1) {
+                        iterator2.remove();
+                    }
+                } else if (wall.p1.x == room.pos.x + room.dim.width && wall.p2.x == room.pos.x + room.dim.width &&
+                        wall.p1.y >= room.pos.y && wall.p2.y <= room.pos.y + room.dim.height) {
+                    rightCount++;
+                    if (rightCount > 1) {
+                        iterator2.remove();
+                    }
+                } else if (wall.p1.y == room.pos.y && wall.p2.y == room.pos.y &&
+                        wall.p1.x >= room.pos.x && wall.p2.x <= room.pos.x + room.dim.width) {
+                    topCount++;
+                    if (topCount > 1) {
+                        iterator2.remove();
+                    }
+                } else if (wall.p1.y == room.pos.y + room.dim.height && wall.p2.y == room.pos.y + room.dim.height &&
+                        wall.p1.x >= room.pos.x && wall.p2.x <= room.pos.x + room.dim.width) {
+                    bottomCount++;
+                    if (bottomCount > 1) {
+                        iterator2.remove();
+                    }
+                }
+            }
+        }
+        for (Wall wall: wallList) {
+            wall.draw(g);
+        }
+        System.out.println(wallList);
+    }
+
+    private int getLength(Pos p1, Pos p2) {
+        return (int) Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
     }
 
     // find the next free space according to row-major order
@@ -312,6 +513,44 @@ public class Plan extends Canvas {
         return new Pos(xMax, yMax);
     }
 
+    private void addWallsAround(Room room) {
+        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y)))) {
+            Wall t_wall = new Wall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y));
+            wallList.add(t_wall);
+        }
+        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y)), normalizePos(new Pos(room.pos.x, room.pos.y + room.dim.height)))) {
+            Wall l_wall = new Wall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x, room.pos.y + room.dim.height));
+            wallList.add(l_wall);
+        }
+        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y + room.dim.height)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height)))) {
+            Wall b_wall = new Wall(new Pos(room.pos.x, room.pos.y + room.dim.height), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height));
+            wallList.add(b_wall);
+        }
+        if (wallNotExists(normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height)))) {
+            Wall r_wall = new Wall(new Pos(room.pos.x + room.dim.width, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height));
+            wallList.add(r_wall);
+        }
+    }
+
+    // Helper method to check if a wall exists between two positions
+    private boolean wallNotExists(Pos start, Pos end) {
+        Pos normalizedStart = normalizePos(start);
+        Pos normalizedEnd = normalizePos(end);
+
+        for (Wall wall : wallList) {
+            if ((wall.p1.equals(normalizedStart) && wall.p2.equals(normalizedEnd)) ||
+                    (wall.p1.equals(normalizedEnd) && wall.p2.equals(normalizedStart))) {
+                return false; // Wall already exists
+            }
+        }
+        return true;
+    }
+
+    // Normalize a position to ensure consistent order (e.g., p1 is "smaller")
+    private Pos normalizePos(Pos pos) {
+        return new Pos(Math.min(pos.x, pos.y), Math.max(pos.x, pos.y));
+    }
+
     private void createRoom(String roomType, Pos pos, Dim dim) throws OverlapException {
         Room newRoom = new Room(roomType, dim, pos);
         if (newRoom.checkOverlap(roomList)) {
@@ -319,10 +558,13 @@ public class Plan extends Canvas {
         }
         roomList.add(newRoom);
         System.out.println("Room added to the plan!");
+
+        addWallsAround(newRoom);
+
         repaint();
         mediator.canvasPanelAction("Add Room", newRoom);
-        System.out.println(this.roomList);
     }
+
     public void addRoom(String roomType, Pos pos) throws OverlapException {
         Dim dim = new Dim(150, 150);
         createRoom(roomType, pos, dim);
@@ -354,7 +596,7 @@ public class Plan extends Canvas {
 
     public void addFurniture(String type, String[] vals) throws OverlapException {
         System.out.println("Furniture added to the plan!");
-        Dim dim = (vals[3].isEmpty() && vals[4].isEmpty())? new Dim(Integer.parseInt(vals[3]), Integer.parseInt(vals[2])): new Dim(50, 50);
+        Dim dim = (!vals[3].isEmpty() && !vals[4].isEmpty())? new Dim(Integer.parseInt(vals[3]), Integer.parseInt(vals[2])): new Dim(50, 50);
         Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
         int rotation = Integer.parseInt(vals[4]);
         furnitureList.add(new Furniture(type, dim, pos, rotation, roomList));
