@@ -17,11 +17,6 @@ public class Room implements Serializable {
         this.dim = dimensions;
         this.pos = pos;
         roomId = 0;
-        roomColors.put("bath", new Color(135, 206, 250));
-        roomColors.put("living", new Color(255, 213, 71));
-        roomColors.put("bedroom", new Color(155, 255, 75));
-        roomColors.put("kitchen", new Color(255, 79, 79));
-        roomColors.put("misc", new Color(222, 141, 255));
     }
 
     // TODO: Test this
@@ -38,6 +33,11 @@ public class Room implements Serializable {
     }
 
     public void draw(Graphics g) {
+        roomColors.put("bath", new Color(135, 206, 250));
+        roomColors.put("living", new Color(255, 213, 71));
+        roomColors.put("bedroom", new Color(155, 255, 75));
+        roomColors.put("kitchen", new Color(255, 79, 79));
+        roomColors.put("misc", new Color(222, 141, 255));
         Graphics2D g1 = (Graphics2D) g;
         // g.setColor(Color.BLACK);
         // g1.setStroke(new BasicStroke(5));

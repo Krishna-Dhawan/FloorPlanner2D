@@ -1,7 +1,7 @@
 package comps;
 
 import java.awt.*;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +12,7 @@ public class Wall implements Serializable {
 
     public Pos p1;
     public Pos p2;
+    public boolean isRoomBoundary = false;
     private List<Section> sections; // Segments of the wall
 
     public Wall(Pos p1, Pos p2) {
@@ -84,15 +85,37 @@ public class Wall implements Serializable {
     }
 
     // Represents a segment of the wall (normal, door, or window)
-    private static class Section {
+    private static class Section implements Serializable {
         int start;
         int end;
-        Stroke stroke;
+        transient Stroke stroke; // Mark Stroke as transient
+        private String strokeType; // To store the type of stroke (e.g., "normal", "dashed")
 
         public Section(int start, int end, Stroke stroke) {
             this.start = start;
             this.end = end;
             this.stroke = stroke;
+            this.strokeType = (stroke instanceof BasicStroke && ((BasicStroke) stroke).getDashArray() != null) ? "dashed" : "normal";
+        }
+
+        // Custom serialization to handle Stroke
+        @Serial
+        private void writeObject(ObjectOutputStream oos) throws IOException {
+            oos.defaultWriteObject(); // Serialize other fields
+        }
+
+        // Custom deserialization to reinitialize Stroke
+        @Serial
+        private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+            ois.defaultReadObject(); // Deserialize other fields
+
+            // Reinitialize Stroke based on strokeType
+            if ("dashed".equals(strokeType)) {
+                this.stroke = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
+            } else {
+                this.stroke = new BasicStroke(6); // Normal stroke
+            }
         }
     }
+
 }

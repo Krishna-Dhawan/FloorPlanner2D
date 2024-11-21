@@ -19,15 +19,6 @@ public class Furniture implements Serializable {
         this.dim = dim;
         this.pos = pos;
         this.rotation = rotation;
-        try {
-            furnitureImages.put("bed", ImageIO.read(new File("./Images/Furnitures/bed.png")));
-            furnitureImages.put("chair", ImageIO.read(new File("./Images/Furnitures/chair.png")));
-            furnitureImages.put("dining_set", ImageIO.read(new File("./Images/Furnitures/dinig_set.png")));
-            furnitureImages.put("sofa", ImageIO.read(new File("./Images/Furnitures/sofa.png")));
-            furnitureImages.put("table", ImageIO.read(new File("./Images/Furnitures/table.png")));
-        } catch (IOException e) {
-            System.out.println("Error reading furniture images");
-        }
         decideRoom(roomList);
     }
 
@@ -51,8 +42,41 @@ public class Furniture implements Serializable {
         }
         return false;
     }
+    public boolean checkWallOverlap(java.util.List<Wall> wallList) {
+        for (Wall wall : wallList) {
+            // Check if furniture overlaps with wall
+            if (wall.p1.x == wall.p2.x) { // Vertical wall
+                if (this.pos.x < wall.p1.x && this.pos.x + this.dim.width > wall.p1.x &&
+                        this.pos.y < Math.max(wall.p1.y, wall.p2.y) &&
+                        this.pos.y + this.dim.height > Math.min(wall.p1.y, wall.p2.y)) {
+                    return true;
+                }
+            } else if (wall.p1.y == wall.p2.y) { // Horizontal wall
+                if (this.pos.y < wall.p1.y && this.pos.y + this.dim.height > wall.p1.y &&
+                        this.pos.x < Math.max(wall.p1.x, wall.p2.x) &&
+                        this.pos.x + this.dim.width > Math.min(wall.p1.x, wall.p2.x)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     public void draw(Graphics g) {
+        try {
+            furnitureImages.put("bed", ImageIO.read(new File("./Images/Furnitures/bed.png")));
+            furnitureImages.put("chair", ImageIO.read(new File("./Images/Furnitures/chair.png")));
+            furnitureImages.put("dining_set", ImageIO.read(new File("./Images/Furnitures/dinig_set.png")));
+            furnitureImages.put("sofa", ImageIO.read(new File("./Images/Furnitures/sofa.png")));
+            furnitureImages.put("table", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("commode", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("closet", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("shower", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("kit_sink", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("stove", ImageIO.read(new File("./Images/Furnitures/table.png")));
+        } catch (IOException e) {
+            System.out.println("Error reading furniture images");
+        }
         Graphics2D g2d = (Graphics2D) g;
         AffineTransform originalTransform = g2d.getTransform();
 

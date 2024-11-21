@@ -303,5 +303,6 @@ public class Screen extends JFrame {
         plan.fetchRoomList(this.roomList);
         plan.fetchFurnitureList(this.furnitureList);
         plan.fetchWallList(this.wallList);
+        repaint();
     }
 }

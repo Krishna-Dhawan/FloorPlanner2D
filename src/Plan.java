@@ -173,6 +173,9 @@ public class Plan extends Canvas {
             if (selected_Furniture.checkOverlap(excludedFurnitureList)) {
                 throw new OverlapException("Overlapping furniture");
             }
+            if (selected_Furniture.checkWallOverlap(wallList)) {
+                throw new OverlapException("Furniture overlaps with wall");
+            }
         }
     }
 
@@ -332,9 +335,12 @@ public class Plan extends Canvas {
     }
 
     private void addSection(Wall selectedWall, int x, int y, String type) {
+        if (type.equals("win") && selectedWall.isRoomBoundary) {
+            JOptionPane.showMessageDialog(this, "Cannot add window to a room boundary wall");
+            return;
+        }
         JDialog addWinDialog = new JDialog(mediator);
         addWinDialog.setTitle("Add " + ((type.equals("win"))? "Window": "Door"));
-
         JLabel wl = new JLabel("Width: ");
         JTextField w = new JTextField(10); // Input field for window width
         JButton ok = new JButton("OK");
@@ -347,7 +353,7 @@ public class Plan extends Canvas {
                 int start = calculateStartPosition(selectedWall, x, y);
 
                 // Add the window to the wall
-                if ((type.equals("win"))) {
+                if (type.equals("win")) {
                     selectedWall.addWindow(start, width);
                 } else {
                     selectedWall.addDoor(start, width);
@@ -513,37 +519,47 @@ public class Plan extends Canvas {
         return new Pos(xMax, yMax);
     }
 
+    private Wall createBoundaryWall(Pos start, Pos end) {
+        Wall wall = new Wall(start, end);
+        wall.isRoomBoundary = false; // Default to not a boundary
+        return wall;
+    }
+
     private void addWallsAround(Room room) {
-        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y)))) {
-            Wall t_wall = new Wall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y));
-            wallList.add(t_wall);
-        }
-        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y)), normalizePos(new Pos(room.pos.x, room.pos.y + room.dim.height)))) {
-            Wall l_wall = new Wall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x, room.pos.y + room.dim.height));
-            wallList.add(l_wall);
-        }
-        if (wallNotExists(normalizePos(new Pos(room.pos.x, room.pos.y + room.dim.height)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height)))) {
-            Wall b_wall = new Wall(new Pos(room.pos.x, room.pos.y + room.dim.height), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height));
-            wallList.add(b_wall);
-        }
-        if (wallNotExists(normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y)), normalizePos(new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height)))) {
-            Wall r_wall = new Wall(new Pos(room.pos.x + room.dim.width, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height));
-            wallList.add(r_wall);
+        // top
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y), room);
+        // left
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x, room.pos.y + room.dim.height), room);
+        // bottom
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y + room.dim.height), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
+        // right
+        addOrUpdateWall(new Pos(room.pos.x + room.dim.width, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
+    }
+
+    // Adds a wall or updates an existing one, adjusting the isRoomBoundary property
+    private void addOrUpdateWall(Pos start, Pos end, Room room) {
+        Wall existingWall = findWallAtPosition(start, end);
+        if (existingWall != null) {
+            // Wall already exists, update it to be a room boundary
+            existingWall.isRoomBoundary = true;
+        } else {
+            Wall newWall = createBoundaryWall(start, end);
+            wallList.add(newWall);
         }
     }
 
-    // Helper method to check if a wall exists between two positions
-    private boolean wallNotExists(Pos start, Pos end) {
+    // Helper to find an existing wall between two positions
+    private Wall findWallAtPosition(Pos start, Pos end) {
         Pos normalizedStart = normalizePos(start);
         Pos normalizedEnd = normalizePos(end);
 
         for (Wall wall : wallList) {
             if ((wall.p1.equals(normalizedStart) && wall.p2.equals(normalizedEnd)) ||
                     (wall.p1.equals(normalizedEnd) && wall.p2.equals(normalizedStart))) {
-                return false; // Wall already exists
+                return wall; // Return the existing wall
             }
         }
-        return true;
+        return null; // No wall found
     }
 
     // Normalize a position to ensure consistent order (e.g., p1 is "smaller")
@@ -599,7 +615,12 @@ public class Plan extends Canvas {
         Dim dim = (!vals[3].isEmpty() && !vals[4].isEmpty())? new Dim(Integer.parseInt(vals[3]), Integer.parseInt(vals[2])): new Dim(50, 50);
         Pos pos = new Pos(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
         int rotation = Integer.parseInt(vals[4]);
-        furnitureList.add(new Furniture(type, dim, pos, rotation, roomList));
+        Furniture newFurniture = new Furniture(type, dim, pos, rotation, roomList);
+
+        if (newFurniture.checkWallOverlap(wallList)) {
+            throw new OverlapException("Furniture overlaps with wall");
+        }
+        furnitureList.add(newFurniture);
         repaint();
     }
 
