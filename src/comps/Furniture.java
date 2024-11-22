@@ -69,11 +69,11 @@ public class Furniture implements Serializable {
             furnitureImages.put("dining_set", ImageIO.read(new File("./Images/Furnitures/dinig_set.png")));
             furnitureImages.put("sofa", ImageIO.read(new File("./Images/Furnitures/sofa.png")));
             furnitureImages.put("table", ImageIO.read(new File("./Images/Furnitures/table.png")));
-            furnitureImages.put("commode", ImageIO.read(new File("./Images/Furnitures/table.png")));
-            furnitureImages.put("closet", ImageIO.read(new File("./Images/Furnitures/table.png")));
-            furnitureImages.put("shower", ImageIO.read(new File("./Images/Furnitures/table.png")));
-            furnitureImages.put("kit_sink", ImageIO.read(new File("./Images/Furnitures/table.png")));
-            furnitureImages.put("stove", ImageIO.read(new File("./Images/Furnitures/table.png")));
+            furnitureImages.put("commode", ImageIO.read(new File("./Images/Furnitures/commode.png")));
+            furnitureImages.put("closet", ImageIO.read(new File("./Images/Furnitures/closet.png")));
+            furnitureImages.put("shower", ImageIO.read(new File("./Images/Furnitures/shower.png")));
+            furnitureImages.put("kit_sink", ImageIO.read(new File("./Images/Furnitures/kitchensink.png")));
+            furnitureImages.put("stove", ImageIO.read(new File("./Images/Furnitures/stove.png")));
         } catch (IOException e) {
             System.out.println("Error reading furniture images");
         }
