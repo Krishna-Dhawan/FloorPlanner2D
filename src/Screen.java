@@ -32,20 +32,30 @@ public class Screen extends JFrame {
         plan = p;
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 0.70; // 75% of horizontal space
+        gbc.weightx = 0.75; // 75% of horizontal space
         gbc.weighty = 1.0; // Full vertical space
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
         add(p, gbc);
 
-        // Control Panel on the left side
+        // Control Panel Constraints
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.3; // 25% of horizontal space
-        gbc.weighty = 1.0;
+        gbc.weightx = 0.25; // Ensure consistent weight
+        gbc.weighty = 1.0;  // Full vertical space
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
         add(cp.cp, gbc);
+
+// Set Preferred Size
+        cp.cp.setPreferredSize(new Dimension(300, getHeight()));
+        cp.cp.setMinimumSize(new Dimension(300, 0));
+        cp.cp.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
+
+// Revalidate and Repaint After Updates
+        cp.cp.revalidate();
+        cp.cp.repaint();
+
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -317,3 +327,6 @@ public class Screen extends JFrame {
         repaint();
     }
 }
+
+  
+     
