@@ -13,6 +13,8 @@ public class Screen extends JFrame {
     public java.util.List<Furniture> furnitureList = new ArrayList<>();
     public java.util.List<Wall> wallList = new ArrayList<>();
 
+    ControlPanel cp = new ControlPanel(this);
+
     public Screen() {
         setTitle("Floor Planner 2D" + (this.title.isEmpty()?"":" - " + this.title));
         System.out.println("Hello World");
@@ -37,7 +39,6 @@ public class Screen extends JFrame {
         add(p, gbc);
 
         // Control Panel on the left side
-        ControlPanel cp = new ControlPanel(this);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0.3; // 25% of horizontal space
@@ -149,6 +150,12 @@ public class Screen extends JFrame {
             case "Snap Back":
                 plan.snapBack();
                 break;
+            case "sel-room":
+                cp.setVals(newRoom);
+                break;
+            case "set-null":
+                cp.setVals();
+                break;
             default:
                 break;
         }
@@ -166,6 +173,9 @@ public class Screen extends JFrame {
                 break;
             case "Snap Back":
                 plan.snapBack();
+                break;
+            case "sel-furniture":
+                cp.setVals(newFurniture);
                 break;
             default:
                 break;

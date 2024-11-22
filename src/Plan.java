@@ -22,7 +22,7 @@ public class Plan extends Canvas {
         this.roomList = new ArrayList<>();
         this.furnitureList = new ArrayList<>();
         this.wallList = new ArrayList<>();
-        setBackground(Color.WHITE);
+        setBackground(new Color(240, 240, 240));
 
         // Add the mouse listener
         addMouseListener(new MouseAdapter() {
@@ -125,6 +125,8 @@ public class Plan extends Canvas {
                 }
             }
         } else if (SwingUtilities.isLeftMouseButton(e) && (selected_Room != null || selected_Furniture != null)) {
+            if (selected_Room != null) mediator.canvasPanelAction("sel-room", selected_Room);
+            else mediator.canvasPanelAction("sel-furniture", selected_Furniture);
             dynamicPos = e.getPoint();
             isDragging = true;
         }
@@ -138,17 +140,19 @@ public class Plan extends Canvas {
         if (selected_Room != null) {
             selected_Room.pos.x += xMoved;
             selected_Room.pos.y += yMoved;
+            repaint();
         } else {
             selected_Furniture.pos.x += xMoved;
             selected_Furniture.pos.y += yMoved;
+            repaint();
         }
 
         dynamicPos = e.getPoint();
-
-        repaint();
     }
 
     private void handleMouseRelease(MouseEvent e) throws OverlapException{
+        Room x = null;
+        mediator.canvasPanelAction("set-null", x);
         isDragging = false;
         if (selected_Room != null) {
             java.util.List<Room> excludedRoomList = new java.util.ArrayList<>();
@@ -627,9 +631,10 @@ public class Plan extends Canvas {
         repaint();
     }
 
-    private void resizeFurniture(Furniture furniture, int h, int w) throws OverlapException{
+    private void resizeFurniture(Furniture furniture, int h, int w, int r) throws OverlapException{
         furniture.dim.height = h;
         furniture.dim.width = w;
+        furniture.rotation = r;
         java.util.List<Furniture> excludedFurnitureList = new ArrayList<>();
         for (Furniture f : furnitureList) {
             if (f != furniture) {
@@ -650,13 +655,24 @@ public class Plan extends Canvas {
         JTextField heightField = new JTextField(String.valueOf(furniture.dim.height), 10);
         JLabel widthLabel = new JLabel("Width:");
         JTextField widthField = new JTextField(String.valueOf(furniture.dim.width), 10);
+        JLabel rotationLabel = new JLabel("Rotation:");
+        JTextField rotationField = new JTextField(String.valueOf(furniture.rotation), 10);
+        JButton incR = new JButton("++");
+
+        incR.addActionListener(e -> {
+            int r = furniture.rotation;
+            r += 90;
+            if (r >= 360) r = 0;
+            rotationField.setText(String.valueOf(r));
+        });
 
         JButton resizeButton = new JButton("Resize");
         resizeButton.addActionListener(ev -> {
             try {
                 int h = Integer.parseInt(heightField.getText());
                 int w = Integer.parseInt(widthField.getText());
-                resizeFurniture(furniture, h, w);
+                int r = Integer.parseInt(rotationField.getText());
+                resizeFurniture(furniture, h, w, r);
             } catch (OverlapException ex) {
                 mediator.handleOverlapException(false, ex.getMessage());
             }
@@ -668,6 +684,8 @@ public class Plan extends Canvas {
         dialog.add(widthLabel);
         dialog.add(widthField);
         dialog.add(resizeButton);
+        dialog.add(rotationLabel);
+        dialog.add(rotationField);
 
         dialog.setLayout(new FlowLayout());
         dialog.setSize(300, 200);

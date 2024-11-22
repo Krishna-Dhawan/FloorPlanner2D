@@ -7,11 +7,20 @@ public class ControlPanel extends Component {
     JPanel cp;
     private final Screen mediator;
 
+    public JTextField x = new JTextField(20);
+    public JTextField y = new JTextField(20);
+    public JTextField w = new JTextField(10);
+    public JTextField r  = new JTextField(10);
+    public JTextField h = new JTextField(10);
+
+    private int currRotation;
+
     public ControlPanel(Screen screen) {
         mediator = screen;
         cp = new JPanel();
         cp.setLayout(null); // Set layout to null for absolute positioning
         cp.setBackground(Color.LIGHT_GRAY);
+        currRotation = 0;
 
         JLabel l1 = new JLabel("ADD ROOM");
         l1.setBounds(100, 0, 150, 30); // Set position and size
@@ -41,11 +50,9 @@ public class ControlPanel extends Component {
         k1JLabel.setBounds(10, 140, 150, 30);
         cp.add(k1JLabel);
 
-        JTextField x = new JTextField(20);
         x.setBounds(30,170, 250, 30);
         cp.add(x);
 
-        JTextField y = new JTextField(20);
         y.setBounds(30, 210, 250, 30);
         cp.add(y);
 
@@ -53,15 +60,11 @@ public class ControlPanel extends Component {
         k2JLabel.setBounds(10, 240, 150, 30);
         cp.add(k2JLabel);
 
-        JTextField h = new JTextField(10);
         h.setBounds(30, 265, 250, 30);
         cp.add(h);
 
-        JTextField w = new JTextField(10);
         w.setBounds(30, 305, 250, 30);
         cp.add(w);
-
-       
 
         r1.addActionListener(e -> {
             String[] vals = {x.getText(), y.getText(), h.getText(), w.getText()};
@@ -132,10 +135,13 @@ public class ControlPanel extends Component {
         k3JLabel.setBounds(10, 590, 150, 30);
         cp.add(k3JLabel);
 
-        JTextField r  = new JTextField(10);
         r.setBounds(30, 620, 250, 30);
-        r.setText("0");
+        r.setText(currRotation + "");
         cp.add(r);
+
+        JButton incR = new JButton("++");
+        incR.setBounds(280, 620, 30, 30);
+        cp.add(incR);
 
         f1.addActionListener(e -> {
             String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
@@ -177,5 +183,36 @@ public class ControlPanel extends Component {
             String[] vals = {x.getText(), y.getText(), h.getText(), w.getText(), r.getText()};
             mediator.controlPanelAction("Add Furniture", "stove", vals);
         });
+
+        incR.addActionListener(e -> incRotation());
+    }
+
+    public void setVals(Room room) {
+        x.setText(room.pos.x + "");
+        y.setText(room.pos.y + "");
+        h.setText(room.dim.height + "");
+        w.setText(room.dim.width + "");
+    }
+    public void setVals(Furniture furniture) {
+        x.setText(furniture.pos.x + "");
+        y.setText(furniture.pos.y + "");
+        h.setText(furniture.dim.height + "");
+        w.setText(furniture.dim.width + "");
+        r.setText(furniture.rotation + "");
+    }
+    public void setVals() {
+        x.setText("");
+        y.setText("");
+        h.setText("");
+        w.setText("");
+        r.setText("");
+    }
+
+    public void incRotation() {
+        currRotation += 90;
+        if (currRotation >= 360) {
+            currRotation = 0;
+        }
+        r.setText(currRotation + "");
     }
 }
