@@ -343,6 +343,10 @@ public class Plan extends Canvas {
             JOptionPane.showMessageDialog(this, "Cannot add window to a room boundary wall");
             return;
         }
+        if (type.equals("door") && !selectedWall.isRoomBoundary && (Objects.equals(selectedWall.adjRooms.getFirst().roomType, "bath") || (Objects.equals(selectedWall.adjRooms.getFirst().roomType, "bedroom")))) {
+            JOptionPane.showMessageDialog(this, "bedroom or bathroom cannot have door to outside");
+            return;
+        }
         JDialog addWinDialog = new JDialog(mediator);
         addWinDialog.setTitle("Add " + ((type.equals("win"))? "Window": "Door"));
         JLabel wl = new JLabel("Width: ");
@@ -422,6 +426,7 @@ public class Plan extends Canvas {
         while (iterator.hasNext()) {
             Wall wall = iterator.next();
             boolean isAdjacent = false;
+            List<Room> adjacentRooms = new ArrayList<>();
             // Check if the wall is adjacent to any room
             // also, account for cases where a room with larger wall was deleted
             // which was adjacent to a room with smaller edge
@@ -434,6 +439,7 @@ public class Plan extends Canvas {
                         (wall.p1.y == room.pos.y + room.dim.height && wall.p2.y == room.pos.y + room.dim.height && wall.p1.x < room.pos.x + room.dim.width && wall.p2.x > room.pos.x)  // Bottom wall
                 ) {
                     isAdjacent = true;
+                    adjacentRooms.add(room);
                     Pos tP1 = new Pos(0, 0);
                     Pos tP2 = new Pos(0, 0);
                     if (wall.p1.x == room.pos.x && wall.p2.x == room.pos.x && wall.p1.y < room.pos.y + room.dim.height) {
@@ -459,6 +465,9 @@ public class Plan extends Canvas {
             }
             if (!isAdjacent) {
                 iterator.remove();
+            } else {
+                wall.adjRooms = adjacentRooms;
+                wall.isRoomBoundary = adjacentRooms.size() > 1;
             }
         }
         for (Room room : roomList) {
@@ -562,6 +571,7 @@ public class Plan extends Canvas {
             Wall newWall = createBoundaryWall(normalizedStart, normalizedEnd);
             newWall.adjRooms.add(room); // Add the first adjacent room
             wallList.add(newWall);
+            System.out.println("--------");
         }
     }
     // Helper to find an existing wall between two positions
