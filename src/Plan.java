@@ -526,39 +526,49 @@ public class Plan extends Canvas {
         }
         return new Pos(xMax, yMax);
     }
-
+    
+    private void addWallsAround(Room room) {
+        // Top wall
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y), room);
+        // Left wall
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x, room.pos.y + room.dim.height), room);
+        // Bottom wall
+        addOrUpdateWall(new Pos(room.pos.x, room.pos.y + room.dim.height), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
+        // Right wall
+        addOrUpdateWall(new Pos(room.pos.x + room.dim.width, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
+    }
+    // Adds a wall or updates an existing one, adjusting the isRoomBoundary property
     private Wall createBoundaryWall(Pos start, Pos end) {
-        Wall wall = new Wall(start, end);
+        Pos[] normalized = normalizePosPair(start, end);
+        Wall wall = new Wall(normalized[0], normalized[1]);
         wall.isRoomBoundary = false; // Default to not a boundary
         return wall;
     }
-    private void addWallsAround(Room room) {
-        // top
-        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y), room);
-        // left
-        addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x, room.pos.y + room.dim.height), room);
-        // bottom
-        addOrUpdateWall(new Pos(room.pos.x, room.pos.y + room.dim.height), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
-        // right
-        addOrUpdateWall(new Pos(room.pos.x + room.dim.width, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y + room.dim.height), room);
-    }
-
-    // Adds a wall or updates an existing one, adjusting the isRoomBoundary property
     private void addOrUpdateWall(Pos start, Pos end, Room room) {
-        Wall existingWall = findWallAtPosition(start, end);
+        Pos[] normalized = normalizePosPair(start, end);
+        Pos normalizedStart = normalized[0];
+        Pos normalizedEnd = normalized[1];
+
+        Wall existingWall = findWallAtPosition(normalizedStart, normalizedEnd);
         if (existingWall != null) {
-            // Wall already exists, update it to be a room boundary
-            existingWall.isRoomBoundary = true;
+            // Wall already exists, update it to be a room boundary if it now has two or more adjacent rooms
+            if (!existingWall.adjRooms.contains(room)) {
+                existingWall.adjRooms.add(room);
+            }
+            existingWall.isRoomBoundary = existingWall.adjRooms.size() > 1;
+            System.out.println("!!!!!!!!!!");
         } else {
-            Wall newWall = createBoundaryWall(start, end);
+            // Create a new wall
+            Wall newWall = createBoundaryWall(normalizedStart, normalizedEnd);
+            newWall.adjRooms.add(room); // Add the first adjacent room
             wallList.add(newWall);
         }
     }
-
     // Helper to find an existing wall between two positions
     private Wall findWallAtPosition(Pos start, Pos end) {
-        Pos normalizedStart = normalizePos(start);
-        Pos normalizedEnd = normalizePos(end);
+        Pos[] normalized = normalizePosPair(start, end);
+        Pos normalizedStart = normalized[0];
+        Pos normalizedEnd = normalized[1];
 
         for (Wall wall : wallList) {
             if ((wall.p1.equals(normalizedStart) && wall.p2.equals(normalizedEnd)) ||
@@ -570,9 +580,17 @@ public class Plan extends Canvas {
     }
 
     // Normalize a position to ensure consistent order (e.g., p1 is "smaller")
-    private Pos normalizePos(Pos pos) {
-        return new Pos(Math.min(pos.x, pos.y), Math.max(pos.x, pos.y));
+    private Pos[] normalizePosPair(Pos start, Pos end) {
+        if (start.x < end.x || (start.x == end.x && start.y < end.y)) {
+            // Keep start as is if it's already smaller
+            return new Pos[]{start, end};
+        } else {
+            // Swap start and end to maintain order
+            return new Pos[]{end, start};
+        }
     }
+
+
 
     private void createRoom(String roomType, Pos pos, Dim dim) throws OverlapException {
         Room newRoom = new Room(roomType, dim, pos);
@@ -663,7 +681,7 @@ public class Plan extends Canvas {
             int r = furniture.rotation;
             r += 90;
             if (r >= 360) r = 0;
-            rotationField.setText(String.valueOf(r));
+            rotationField.setText(r + "");
         });
 
         JButton resizeButton = new JButton("Resize");
@@ -686,6 +704,7 @@ public class Plan extends Canvas {
         dialog.add(resizeButton);
         dialog.add(rotationLabel);
         dialog.add(rotationField);
+        dialog.add(incR);
 
         dialog.setLayout(new FlowLayout());
         dialog.setSize(300, 200);

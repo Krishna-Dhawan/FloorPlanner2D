@@ -255,6 +255,10 @@ public class Screen extends JFrame {
                     oos.writeObject(furnitureList);
                     oos.writeObject(wallList);
                     System.out.println("Room list saved to: " + file.getAbsolutePath());
+                    if (exitOnClose) {
+                        this.dispose();
+                        System.exit(0);
+                    }
                 } catch (IOException err) {
                     // e.printStackTrace();
                     System.out.println("IOException: " + err.getMessage());
@@ -273,10 +277,6 @@ public class Screen extends JFrame {
             fileNameDialog.setLayout(new FlowLayout());
         } else {
             System.out.println("No directory selected");
-        }
-        if (exitOnClose) {
-            this.dispose();
-            System.exit(0);
         }
     }
 

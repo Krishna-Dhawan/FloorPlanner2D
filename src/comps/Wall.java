@@ -13,6 +13,7 @@ public class Wall implements Serializable {
     public Pos p1;
     public Pos p2;
     public boolean isRoomBoundary = false;
+    public java.util.List<Room> adjRooms = new ArrayList<>();
     private List<Section> sections; // Segments of the wall
 
     public Wall(Pos p1, Pos p2) {
