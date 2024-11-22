@@ -32,7 +32,7 @@ public class Screen extends JFrame {
         plan = p;
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 0.75; // 75% of horizontal space
+        gbc.weightx = 0.95; // 75% of horizontal space
         gbc.weighty = 1.0; // Full vertical space
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
@@ -41,7 +41,7 @@ public class Screen extends JFrame {
         // Control Panel Constraints
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.25; // Ensure consistent weight
+        gbc.weightx = 0.05; // Ensure consistent weight
         gbc.weighty = 1.0;  // Full vertical space
         gbc.gridheight = 1;
         gbc.gridwidth = 1;
