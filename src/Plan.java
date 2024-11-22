@@ -34,7 +34,7 @@ public class Plan extends Canvas {
                     try{
                         handleMouseRelease(e);
                     } catch (OverlapException ex) {
-                        mediator.handleOverlapException(false);
+                        mediator.handleOverlapException(false, ex.getMessage());
                     }
                 }
             }
@@ -290,7 +290,7 @@ public class Plan extends Canvas {
                 addRoom(selectedRoomType, newPos, new Dim(Integer.parseInt(w.getText()), Integer.parseInt(h.getText())));
                 dialog.dispose();
             } catch (OverlapException ex) {
-                mediator.handleOverlapException(true);
+                mediator.handleOverlapException(true, ex.getMessage());
             }
         });
 
@@ -353,10 +353,14 @@ public class Plan extends Canvas {
                 int start = calculateStartPosition(selectedWall, x, y);
 
                 // Add the window to the wall
-                if (type.equals("win")) {
-                    selectedWall.addWindow(start, width);
-                } else {
-                    selectedWall.addDoor(start, width);
+                try {
+                    if (type.equals("win")) {
+                        selectedWall.addWindow(start, width);
+                    } else {
+                        selectedWall.addDoor(start, width);
+                    }
+                } catch (OverlapException ex) {
+                    mediator.handleOverlapException(true, ex.getMessage());
                 }
                 repaint();
                 // Close the dialog
@@ -524,7 +528,6 @@ public class Plan extends Canvas {
         wall.isRoomBoundary = false; // Default to not a boundary
         return wall;
     }
-
     private void addWallsAround(Room room) {
         // top
         addOrUpdateWall(new Pos(room.pos.x, room.pos.y), new Pos(room.pos.x + room.dim.width, room.pos.y), room);
@@ -655,7 +658,7 @@ public class Plan extends Canvas {
                 int w = Integer.parseInt(widthField.getText());
                 resizeFurniture(furniture, h, w);
             } catch (OverlapException ex) {
-                mediator.handleOverlapException(false);
+                mediator.handleOverlapException(false, ex.getMessage());
             }
             dialog.dispose();
         });

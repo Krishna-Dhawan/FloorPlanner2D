@@ -121,7 +121,7 @@ public class Screen extends JFrame {
                     }
                     break;
                 } catch (OverlapException e) {
-                    handleOverlapException(true);
+                    handleOverlapException(true, e.getMessage());
                     break;
                 }
             case "Add Furniture":
@@ -129,7 +129,7 @@ public class Screen extends JFrame {
                     plan.addFurniture(type, vals);
                     break;
                 } catch (OverlapException e) {
-                    handleOverlapException(true);
+                    handleOverlapException(true, e.getMessage());
                 }
             default:
                 break;
@@ -171,10 +171,10 @@ public class Screen extends JFrame {
                 break;
         }
     }
-    public void handleOverlapException(boolean isNewRoom) {
+    public void handleOverlapException(boolean isNewRoom, String msg) {
         System.out.println("OverlapError");
         JDialog overlap = new JDialog(this, "OverlapError");
-        JLabel l = new JLabel("Overlapping Rooms. Change the position or dimensions.");
+        JLabel l = new JLabel(msg);
         overlap.add(l);
         overlap.setLocationRelativeTo(this);
         overlap.setVisible(true);
@@ -238,7 +238,7 @@ public class Screen extends JFrame {
                     emptyNameDialog.setSize(500, 200);
                     return;
                 }
-                File file = new File(selectedDirectory.getAbsolutePath(), this.title + ".dat");
+                File file = new File(selectedDirectory.getAbsolutePath(), this.title + ".fp");
 
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                     oos.writeObject(roomList);
@@ -277,6 +277,7 @@ public class Screen extends JFrame {
         java.util.List<Wall> loadedWalls = new ArrayList<>();
 
         JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(null, "fp"));
         File defaultDirectory = new File("./SavedPlans");
         chooser.setCurrentDirectory(defaultDirectory);
 

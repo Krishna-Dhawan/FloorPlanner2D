@@ -134,6 +134,7 @@ public class ControlPanel extends Component {
 
         JTextField r  = new JTextField(10);
         r.setBounds(30, 620, 250, 30);
+        r.setText("0");
         cp.add(r);
 
         f1.addActionListener(e -> {

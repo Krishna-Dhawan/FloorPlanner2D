@@ -23,30 +23,40 @@ public class Wall implements Serializable {
     }
 
     // Method to add a door at a specified position along the wall
-    public void addDoor(int start, int width) {
+    public void addDoor(int start, int width) throws OverlapException {
         addSegment(start, width, null); // Null stroke to skip the segment (door)
     }
 
     // Method to add a window at a specified position along the wall
-    public void addWindow(int start, int width) {
-        addSegment(start, width, DASHED_STROKE); // Dashed stroke for the window
+    public void addWindow(int start, int width) throws OverlapException {
+        if (!this.isRoomBoundary) {
+            addSegment(start, width, DASHED_STROKE); // Dashed stroke for the window
+        } else {
+            System.out.println("NO!");
+        }
     }
 
     // Adds a new segment to the wall by splitting existing sections
-    private void addSegment(int start, int width, Stroke newStroke) {
+    private void addSegment(int start, int width, Stroke newStroke) throws OverlapException {
         List<Section> newSections = new ArrayList<>();
         int end = start + width;
 
         for (Section section : sections) {
-            // If the section is completely outside the new segment, keep it as is
             if (section.end <= start || section.start >= end) {
                 newSections.add(section);
             } else {
+                // Check for overlap with incompatible sections (e.g., door vs window)
+                if (newStroke == DASHED_STROKE && section.stroke == null) {
+                    throw new OverlapException("Cannot place a window on a door.");
+                }
+                if (newStroke == null && section.stroke == DASHED_STROKE) {
+                    throw new OverlapException("Cannot place a door on a window.");
+                }
                 // Split the section into before, during, and after the new segment
                 if (section.start < start) {
                     newSections.add(new Section(section.start, start, section.stroke));
                 }
-                if (newStroke != null) { // Add the new segment only if it's not a door (null)
+                if (newStroke != null) {
                     newSections.add(new Section(Math.max(start, section.start), Math.min(end, section.end), newStroke));
                 }
                 if (section.end > end) {
@@ -54,9 +64,9 @@ public class Wall implements Serializable {
                 }
             }
         }
-
-        this.sections = newSections; // Update the wall's sections
+        this.sections = newSections;
     }
+
 
     // Calculate the total length of the wall
     private int calculateLength() {
